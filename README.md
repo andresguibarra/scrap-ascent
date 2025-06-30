@@ -85,8 +85,7 @@ The heart of Scrap Ascent's gameplay:
 ### Core Mechanics  
 - **K**: Possess nearby enemy / Release control from possessed enemy
 - **Enter**: Shoot (when controlling armed enemy)
-- **C**: Toggle Weapon (when controlling armed enemy)
-- **G**: Drop Weapon (when controlling armed enemy)
+- **C**: Toggle Weapon (when controlling armed enemy - get/drop weapon)
 
 ### Tips for Controls
 - Possession works within a limited range - get close to enemies
@@ -104,9 +103,8 @@ When controlling Armed Enemies, you gain access to a sophisticated weapon system
 - **Damage**: Projectiles can damage other enemies and destroy their control chips
 
 ### Weapon Management
-- **Toggle**: Switch weapon on/off for different situations
-- **Drop**: Release weapon to make it available for other enemies to pick up
-- **Pickup**: Weapons can be retrieved by getting close to them
+- **Toggle**: Switch weapon on/off for different situations (C key handles both pickup and drop)
+- **Pickup**: Weapons can be retrieved by pressing C when close to them
 
 ## 🚀 Installation & Setup
 
