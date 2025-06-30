@@ -1,0 +1,20 @@
+[gd_scene load_steps=3 format=3 uid="uid://c8h3d5k2nap1q"]
+
+[ext_resource type="Script" uid="uid://b0xdnweui2g1u" path="res://Scripts/Orb.gd" id="1_orb"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_1"]
+size = Vector2(24, 24)
+
+[node name="Orb" type="CharacterBody2D"]
+collision_layer = 8
+script = ExtResource("1_orb")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_1")
+
+[node name="ColorRect" type="ColorRect" parent="."]
+offset_left = -12.0
+offset_top = -12.0
+offset_right = 12.0
+offset_bottom = 12.0
+color = Color(1, 1, 0.5, 0.8)
