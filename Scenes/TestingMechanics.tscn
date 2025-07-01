@@ -1,11 +1,15 @@
-[gd_scene load_steps=9 format=3 uid="uid://bm5n8wqxr5kyd"]
+[gd_scene load_steps=7 format=3 uid="uid://bm5n8wqxr5kyd"]
 
 [ext_resource type="PackedScene" uid="uid://c8h3d5k2nap1q" path="res://Scenes/Orb.tscn" id="1_orb"]
-[ext_resource type="PackedScene" uid="uid://br3eqxxhw6lmw" path="res://Scenes/Enemies/Tier1Enemy.tscn" id="2_tier1"]
-[ext_resource type="PackedScene" uid="uid://d2xillvgedmgl" path="res://Scenes/Enemies/Tier2Enemy.tscn" id="3_tier2"]
+[ext_resource type="PackedScene" uid="uid://br3eqxxhw6lmw" path="res://Scenes/Enemies/Enemy.tscn" id="2_enemy"]
 [ext_resource type="Script" uid="uid://chfcajx0mey86" path="res://Scripts/CameraFollow.gd" id="4_camera"]
-[ext_resource type="PackedScene" uid="uid://gvtp1owqdvvx" path="res://Scenes/Enemies/Tier3Enemy.tscn" id="4_yh5de"]
-[ext_resource type="PackedScene" uid="uid://ck00s7m4p6rqt" path="res://Scenes/Enemies/ArmedEnemy.tscn" id="7_armed"]
+
+[sub_resource type="Environment" id="Environment_1"]
+background_mode = 1
+background_color = Color(0.1, 0.1, 0.15, 1)
+ambient_light_source = 1
+ambient_light_color = Color(0.2, 0.2, 0.3, 1)
+ambient_light_energy = 0.3
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_1"]
 size = Vector2(800, 32)
@@ -14,6 +18,9 @@ size = Vector2(800, 32)
 size = Vector2(200, 32)
 
 [node name="TestingMechanics" type="Node2D"]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_1")
 
 [node name="Platform" type="StaticBody2D" parent="."]
 position = Vector2(400, 400)
@@ -75,21 +82,39 @@ offset_bottom = 16.0
 color = Color(0.6, 0.6, 0.6, 1)
 
 [node name="Orb" parent="." instance=ExtResource("1_orb")]
-position = Vector2(127, 351)
+position = Vector2(466, 339)
 
-[node name="Tier1Enemy" parent="." instance=ExtResource("2_tier1")]
+[node name="Enemy_Tier1" parent="." instance=ExtResource("2_enemy")]
 position = Vector2(350, 350)
 
-[node name="Tier2Enemy" parent="." instance=ExtResource("3_tier2")]
+[node name="Enemy_Tier2_Armed" parent="." instance=ExtResource("2_enemy")]
 position = Vector2(218, 253)
+tier = 2
+has_weapon = true
 
-[node name="Tier3Enemy" parent="." instance=ExtResource("4_yh5de")]
+[node name="Enemy_Tier3" parent="." instance=ExtResource("2_enemy")]
 position = Vector2(574, 203)
+tier = 3
 
-[node name="ArmedEnemy" parent="." instance=ExtResource("7_armed")]
+[node name="Enemy_Tier4_Armed" parent="." instance=ExtResource("2_enemy")]
 position = Vector2(284, 354)
-jump_velocity = -600.0
+tier = 4
+has_weapon = true
 
 [node name="Camera2D" type="Camera2D" parent="."]
 position = Vector2(400, 300)
 script = ExtResource("4_camera")
+
+[node name="Platform5" type="StaticBody2D" parent="."]
+position = Vector2(600, 250)
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Platform5"]
+shape = SubResource("RectangleShape2D_2")
+
+[node name="ColorRect" type="ColorRect" parent="Platform5"]
+offset_left = -100.0
+offset_top = -16.0
+offset_right = 100.0
+offset_bottom = 16.0
+color = Color(0.6, 0.6, 0.6, 1)

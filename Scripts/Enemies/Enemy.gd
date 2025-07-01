@@ -3,8 +3,14 @@ class_name Enemy
 
 enum State { AI, INERT, CONTROLLED }
 enum Skill { MOVE, JUMP, DOUBLE_JUMP, DASH }
-
-@export var skills: Array[Skill] = [Skill.MOVE, Skill.JUMP]
+var skills = {
+	1: [Skill.MOVE, Skill.JUMP],
+	2: [Skill.MOVE, Skill.JUMP],
+	3: [Skill.MOVE, Skill.JUMP, Skill.DASH],
+	4: [Skill.MOVE, Skill.JUMP, Skill.DOUBLE_JUMP, Skill.DASH],
+}
+@export var tier = 1
+@export var has_weapon = false
 @export var jump_velocity: float = -600.0
 @export var ai_speed: float = 100.0
 @export var dash_speed: float = 500.0
@@ -21,27 +27,75 @@ var jumps_remaining: int = 0
 var max_jumps: int = 1
 var can_dash_in_air: bool = true
 
+# Weapon reference (instantiated if has_weapon = true)
+var weapon_instance: Weapon = null
+
 @onready var edge_raycast: RayCast2D = $EdgeRayCast2D
 @onready var wall_raycast: RayCast2D = $WallRayCast2D
-@onready var sprite: Sprite2D = $Sprite2D
+@onready var animated_sprite: AnimatedSprite2D = $AnimatedSprite2D
+@onready var eyes_sprite: AnimatedSprite2D = $Eyes
 
 func _ready() -> void:
 	name = "Enemy"
 	add_to_group("enemies")
+	_setup_tier_configuration()
 	_setup_jump_system()
+	_setup_weapon_if_needed()
 	_update_visual_state()
+	# Ensure animation starts correctly
+	call_deferred("_update_animation")
+	# Initialize eyes visibility based on initial state
+	call_deferred("_initialize_eyes_state")
+	# Debug print
+	_print_configuration_debug()
+
+func _initialize_eyes_state() -> void:
+	if eyes_sprite:
+		# Eyes start hidden unless in CONTROLLED state
+		eyes_sprite.visible = (current_state == State.CONTROLLED)
+		print("Enemy: Eyes initialized - visible: ", eyes_sprite.visible, " state: ", current_state)
+
+func _setup_tier_configuration() -> void:
+	# Configure skills based on tier
+	if tier in skills:
+		# Update AI speed based on tier
+		match tier:
+			1:
+				ai_speed = 80.0
+			2:
+				ai_speed = 100.0
+			3:
+				ai_speed = 120.0
+			4:
+				ai_speed = 140.0
 
 func _setup_jump_system() -> void:
-	# Set max jumps based on skills
+	# Set max jumps based on tier skills
+	var tier_skills = skills.get(tier, [Skill.MOVE, Skill.JUMP])
 	max_jumps = 1  # Default single jump
-	if Skill.DOUBLE_JUMP in skills:
+	if Skill.DOUBLE_JUMP in tier_skills:
 		max_jumps = 2
 	jumps_remaining = max_jumps
+
+func _setup_weapon_if_needed() -> void:
+	if has_weapon and not weapon_instance:
+		_instantiate_weapon()
+
+func _instantiate_weapon() -> void:
+	var weapon_scene := preload("res://Scenes/Weapon.tscn")
+	weapon_instance = weapon_scene.instantiate()
+	add_child(weapon_instance)
+	print("Enemy: Weapon instantiated for tier ", tier)
+
+func _print_configuration_debug() -> void:
+	var tier_skills = skills.get(tier, [])
+	print("Enemy configured - Tier: ", tier, ", Has Weapon: ", has_weapon, ", Skills: ", tier_skills)
 
 func _process(delta: float) -> void:
 	_update_timers(delta)
 	_update_physics(delta)
 	_handle_state_logic()
+	_update_animation()
 	move_and_slide()
 
 func _update_timers(delta: float) -> void:
@@ -104,14 +158,15 @@ func _apply_player_input(direction: Vector2, jump: bool, dash: bool) -> void:
 	_apply_jump(jump)
 
 func _should_dash(dash_input: bool, direction: Vector2) -> bool:
-	if not dash_input or Skill.DASH not in skills or is_dashing:
+	var tier_skills = skills.get(tier, [Skill.MOVE, Skill.JUMP])
+	if not dash_input or Skill.DASH not in tier_skills or is_dashing:
 		return false
 		
 	var can_dash := is_on_floor() or can_dash_in_air
 	if not can_dash:
 		return false
 		
-	var dash_direction: float = direction.x if direction.x != 0.0 else (1.0 if not sprite.flip_h else -1.0)
+	var dash_direction: float = direction.x if direction.x != 0.0 else (1.0 if animated_sprite.flip_h else -1.0)
 	_perform_dash(dash_direction)
 	
 	if not is_on_floor():
@@ -126,7 +181,8 @@ func _apply_horizontal_movement(direction_x: float) -> void:
 		velocity.x = move_toward(velocity.x, 0, ai_speed * 2.0)
 
 func _apply_jump(jump_input: bool) -> void:
-	if jump_input and Skill.JUMP in skills and jumps_remaining > 0:
+	var tier_skills = skills.get(tier, [Skill.MOVE, Skill.JUMP])
+	if jump_input and Skill.JUMP in tier_skills and jumps_remaining > 0:
 		velocity.y = jump_velocity
 		jumps_remaining -= 1
 
@@ -140,9 +196,9 @@ func _perform_dash(direction: float) -> void:
 
 func _flip_to_direction(dir: float) -> void:
 	if dir > 0:
-		sprite.flip_h = false  # Facing right
+		animated_sprite.flip_h = true   # Facing right (flip the left-facing sprite)
 	elif dir < 0:
-		sprite.flip_h = true   # Facing left
+		animated_sprite.flip_h = false  # Facing left (don't flip, sprites face left by default)
 
 func _release_control() -> void:
 	# Store current velocity to preserve momentum
@@ -219,18 +275,31 @@ func destroy_chip() -> void:
 	if current_state != State.CONTROLLED:
 		current_state = State.INERT
 		_update_visual_state()
+	
+	# Drop weapon when chip is destroyed
+	if weapon_instance:
+		_drop_weapon_on_destroy()
+
+func _drop_weapon_on_destroy() -> void:
+	if weapon_instance and weapon_instance.is_held:
+		weapon_instance.drop()
+		weapon_instance = null
 
 func _update_visual_state() -> void:
 	match current_state:
 		State.AI:
-			sprite.modulate = Color(0.8, 0.4, 0.4, 1.0)  # Red when AI
+			animated_sprite.modulate = Color(0.8, 0.4, 0.4, 1.0)  # Red when AI
 		State.INERT:
-			sprite.modulate = Color(0.3, 0.3, 0.3, 1.0)  # Gray when inert
+			animated_sprite.modulate = Color(0.3, 0.3, 0.3, 1.0)  # Gray when inert
 		State.CONTROLLED:
-			sprite.modulate = Color(0.4, 0.8, 0.4, 1.0)  # Green when controlled
+			animated_sprite.modulate = Color(0.4, 0.8, 0.4, 1.0)  # Green when controlled
+	
+	# Force animation update when state changes
+	_update_animation()
 
 func get_facing_direction() -> float:
-	return 1.0 if not sprite.flip_h else -1.0
+	# Sprites face left by default, so flip_h = false means facing left (-1), flip_h = true means facing right (1)
+	return 1.0 if animated_sprite.flip_h else -1.0
 
 func take_damage(_damage_amount: float) -> void:
 	match current_state:
@@ -240,3 +309,120 @@ func take_damage(_damage_amount: float) -> void:
 			destroy_chip()
 		State.INERT:
 			pass  # Already destroyed, no effect
+
+# =============================================================================
+# ANIMATION MANAGEMENT
+# Note: All sprites face LEFT by default
+# flip_h = false = facing left (-1)
+# flip_h = true = facing right (1) 
+# =============================================================================
+func _update_animation() -> void:
+	if not animated_sprite:
+		return
+	
+	var target_animation := _get_target_animation()
+	if animated_sprite.animation != target_animation:
+		animated_sprite.play(target_animation)
+	
+	# Update eyes animation only when CONTROLLED
+	_update_eyes_animation(target_animation)
+	
+	# Update sprite flip - do this after setting animation to avoid conflicts
+	call_deferred("_update_sprite_flip")
+
+func _get_target_animation() -> String:
+	# Priority order: Dash > Jump/Fall > Movement > State-based > Idle
+	
+	if is_dashing:
+		return "Dash"
+	
+	if not is_on_floor():
+		if velocity.y < -50:  # Going up with significant speed
+			return "Jump"
+		elif velocity.y > 50:  # Falling with significant speed
+			return "Fall"
+	
+	if current_state == State.INERT:
+		return "Inert"
+	
+	# Movement animations - check for any horizontal movement
+	if abs(velocity.x) > 5:  # Moving horizontally
+		return "MoveLeft"  # Base animation is facing left, we'll flip for right movement
+	
+	# Default idle state - check if Idle animation exists, otherwise use first frame of MoveLeft
+	var sprite_frames = animated_sprite.sprite_frames
+	if sprite_frames and sprite_frames.has_animation("Idle"):
+		return "Idle"
+	else:
+		return "MoveLeft"  # Fallback to first frame of MoveLeft as idle
+
+func _update_sprite_flip() -> void:
+	if not animated_sprite:
+		return
+	
+	# Store current flip state to avoid unnecessary changes
+	var current_flip := animated_sprite.flip_h
+	var should_flip_right := current_flip  # Default to keeping current state
+	
+	if current_state == State.CONTROLLED:
+		# When controlled, use input direction
+		var direction := InputManager.get_movement_input()
+		if abs(direction.x) > 0.1:  # Only change direction with actual input
+			should_flip_right = direction.x > 0  # Flip when moving right (sprites face left by default)
+	elif current_state == State.AI:
+		# When AI, use movement direction but with threshold
+		if abs(velocity.x) > 20:  # Higher threshold to avoid flickering
+			should_flip_right = velocity.x > 0  # Flip when moving right
+	# For INERT state, keep current direction
+	
+	# Only update if there's actually a change needed
+	if current_flip != should_flip_right:
+		animated_sprite.flip_h = should_flip_right
+		# Sync eyes flip when body flip changes
+		if eyes_sprite and current_state == State.CONTROLLED:
+			eyes_sprite.flip_h = should_flip_right
+
+func _update_eyes_animation(body_animation: String) -> void:
+	if not eyes_sprite:
+		return
+	
+	# Eyes only animate when in CONTROLLED state
+	if current_state != State.CONTROLLED:
+		# Hide eyes or stop animation when not controlled
+		if eyes_sprite.visible:
+			eyes_sprite.visible = false
+			print("Enemy: Eyes hidden - not controlled")
+		return
+	
+	# Show eyes when controlled
+	if not eyes_sprite.visible:
+		eyes_sprite.visible = true
+		print("Enemy: Eyes shown - controlled state")
+	
+	# Sync eyes animation with body animation
+	# Skip "Inert" animation for eyes since they shouldn't show when inert
+	var target_eyes_animation := body_animation
+	if target_eyes_animation == "Inert":
+		eyes_sprite.visible = false
+		print("Enemy: Eyes hidden - inert animation")
+		return
+	
+	# Play the corresponding eyes animation
+	if eyes_sprite.sprite_frames and eyes_sprite.sprite_frames.has_animation(target_eyes_animation):
+		if eyes_sprite.animation != target_eyes_animation:
+			eyes_sprite.play(target_eyes_animation)
+			print("Enemy: Eyes animation changed to: ", target_eyes_animation)
+	else:
+		print("Enemy: Eyes animation not found: ", target_eyes_animation)
+	
+	# Sync eyes flip with body flip
+	call_deferred("_sync_eyes_flip")
+
+func _sync_eyes_flip() -> void:
+	if not eyes_sprite or not animated_sprite:
+		return
+	
+	# Eyes should always match the body flip direction
+	if eyes_sprite.flip_h != animated_sprite.flip_h:
+		eyes_sprite.flip_h = animated_sprite.flip_h
+		print("Enemy: Eyes flip synced with body - flip_h: ", eyes_sprite.flip_h)

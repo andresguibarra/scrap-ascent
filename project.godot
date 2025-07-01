@@ -23,6 +23,10 @@ InputManager="*res://Scripts/Autoloads/InputManager.gd"
 
 window/size/viewport_width=1280
 window/size/viewport_height=720
+window/size/mode=3
+window/stretch/mode="viewport"
+window/stretch/scale=2.0
+window/stretch/scale_mode="integer"
 
 [input]
 
@@ -75,3 +79,7 @@ drop_weapon={
 2d_physics/layer_4="Orb"
 2d_physics/layer_5="Projectiles"
 2d_physics/layer_6="Weapons"
+
+[rendering]
+
+textures/canvas_textures/default_texture_filter=0
