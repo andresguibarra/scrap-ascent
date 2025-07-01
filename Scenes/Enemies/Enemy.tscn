@@ -181,7 +181,7 @@ ai_speed = 80.0
 shape = SubResource("RectangleShape2D_1")
 
 [node name="EdgeRayCast2D" type="RayCast2D" parent="."]
-target_position = Vector2(48, 32)
+target_position = Vector2(15, 15)
 
 [node name="WallRayCast2D" type="RayCast2D" parent="."]
 target_position = Vector2(20, 0)

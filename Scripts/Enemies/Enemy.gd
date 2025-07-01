@@ -249,7 +249,7 @@ func _has_edge_ahead(direction: float) -> bool:
 	if not edge_raycast:
 		return false
 		
-	edge_raycast.target_position = Vector2(48 * direction, 32)
+	edge_raycast.target_position = Vector2(24 * direction, 32)
 	edge_raycast.force_raycast_update()
 	
 	return is_on_floor() and not edge_raycast.is_colliding()
