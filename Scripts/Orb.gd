@@ -1,5 +1,9 @@
 extends CharacterBody2D
 
+# Signals for camera zoom
+signal possession_started
+signal possession_ended
+
 @export var speed := 200.0
 @export var possession_range := 100.0  # Increased for testing
 @export var attraction_speed := 800.0  # Speed when moving towards enemy for possession
@@ -222,6 +226,7 @@ func _attempt_possession() -> void:
 		target_enemy = enemy
 		controlled = false  # Stop responding to normal input
 		_flash_light_on_possession()
+		possession_started.emit()
 	else:
 		print("Orb: No valid enemy found for possession")
 
@@ -269,6 +274,7 @@ func _cancel_possession() -> void:
 	target_enemy = null
 	controlled = true
 	_reset_particle_effects()
+	possession_ended.emit()
 
 func _reset_particle_effects() -> void:
 	_set_particle_parameters("idle")
@@ -278,6 +284,7 @@ func _complete_possession() -> void:
 	if target_enemy:
 		_flash_light_on_possession()
 		target_enemy.posses()
+	possession_ended.emit()
 	queue_free()
 
 func _setup_line_of_sight() -> void:

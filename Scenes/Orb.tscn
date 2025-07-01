@@ -149,7 +149,6 @@ script = ExtResource("1_orb")
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 position = Vector2(0, 4)
 shape = SubResource("RectangleShape2D_1")
-debug_color = Color(0.946957, 3.85046e-06, 0.585362, 0.42)
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
 use_parent_material = true
