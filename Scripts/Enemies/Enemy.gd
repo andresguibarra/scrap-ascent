@@ -35,6 +35,7 @@ var weapon_instance: Weapon = null
 @onready var animated_sprite: AnimatedSprite2D = $AnimatedSprite2D
 @onready var eyes_sprite: AnimatedSprite2D = $Eyes
 @onready var light: PointLight2D = $PointLight2D
+@onready var damage_particles: GPUParticles2D = $DamageParticles
 
 func _ready() -> void:
 	name = "Enemy"
@@ -278,6 +279,7 @@ func destroy_chip() -> void:
 	if current_state != State.CONTROLLED:
 		current_state = State.INERT
 		_update_visual_state()
+		_generate_damage_particles()
 	
 	# Drop weapon when chip is destroyed
 	if weapon_instance:
@@ -447,3 +449,24 @@ func _deactivate_possession_light() -> void:
 		print("Enemy: Possession light deactivated")
 	else:
 		print("Enemy: Warning - PointLight2D not found!")
+
+# =============================================================================
+# DAMAGE PARTICLE EFFECTS
+# =============================================================================
+func _generate_damage_particles() -> void:
+	if not damage_particles:
+		print("Enemy: Warning - DamageParticles not found!")
+		return
+	
+	# Get the current modulate color of the enemy sprite
+	var enemy_color = animated_sprite.modulate
+	
+	# Apply the enemy's color to the particles
+	var particle_material = damage_particles.process_material as ParticleProcessMaterial
+	if particle_material:
+		particle_material.color = enemy_color
+		print("Enemy: Damage particles generated with color: ", enemy_color)
+	
+	# Trigger the particle burst
+	damage_particles.restart()
+	damage_particles.emitting = true

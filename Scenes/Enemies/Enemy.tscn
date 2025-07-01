@@ -1,4 +1,4 @@
-[gd_scene load_steps=22 format=3 uid="uid://br3eqxxhw6lmw"]
+[gd_scene load_steps=23 format=3 uid="uid://br3eqxxhw6lmw"]
 
 [ext_resource type="Script" uid="uid://cri6ele7qliv2" path="res://Scripts/Enemies/Enemy.gd" id="1_3h0b7"]
 [ext_resource type="Texture2D" uid="uid://dd64sgkax14bn" path="res://Assets/RobotScrapAscent.png" id="2_s7ep0"]
@@ -110,6 +110,18 @@ animations = [{
 "speed": 10.0
 }]
 
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_damage"]
+particle_flag_disable_z = true
+emission_shape = 1
+emission_sphere_radius = 8.0
+direction = Vector3(0, -1, 0)
+spread = 360.0
+initial_velocity_min = 30.0
+initial_velocity_max = 80.0
+gravity = Vector3(0, 98, 0)
+scale_min = 0.3
+scale_max = 0.8
+
 [sub_resource type="AtlasTexture" id="AtlasTexture_d330j"]
 atlas = ExtResource("2_s7ep0")
 region = Rect2(0, 48, 16, 16)
@@ -201,6 +213,14 @@ shadow_enabled = true
 shadow_filter = 1
 texture = ExtResource("3_light")
 texture_scale = 0.03
+
+[node name="DamageParticles" type="GPUParticles2D" parent="."]
+emitting = false
+amount = 15
+one_shot = true
+explosiveness = 1.0
+fixed_fps = 0
+process_material = SubResource("ParticleProcessMaterial_damage")
 
 [node name="Eyes" type="AnimatedSprite2D" parent="."]
 sprite_frames = SubResource("SpriteFrames_g2h3t")
