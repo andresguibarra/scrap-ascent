@@ -34,6 +34,7 @@ var weapon_instance: Weapon = null
 @onready var wall_raycast: RayCast2D = $WallRayCast2D
 @onready var animated_sprite: AnimatedSprite2D = $AnimatedSprite2D
 @onready var eyes_sprite: AnimatedSprite2D = $Eyes
+@onready var light: PointLight2D = $PointLight2D
 
 func _ready() -> void:
 	name = "Enemy"
@@ -126,6 +127,7 @@ func _handle_state_logic() -> void:
 func posses():
 	current_state = State.CONTROLLED
 	_update_visual_state()
+	_activate_possession_light()
 
 func is_controlled():
 	return current_state == State.CONTROLLED
@@ -224,6 +226,7 @@ func _release_control() -> void:
 	
 	# Update visual state
 	_update_visual_state()
+	_deactivate_possession_light()
 
 func _preserve_momentum_after_release(previous_velocity: Vector2) -> void:
 	# Keep the velocity to maintain inertia
@@ -426,3 +429,21 @@ func _sync_eyes_flip() -> void:
 	if eyes_sprite.flip_h != animated_sprite.flip_h:
 		eyes_sprite.flip_h = animated_sprite.flip_h
 		print("Enemy: Eyes flip synced with body - flip_h: ", eyes_sprite.flip_h)
+
+# =============================================================================
+# POSSESSION LIGHTING EFFECTS
+# =============================================================================
+func _activate_possession_light() -> void:
+	if light:
+		light.enabled = true
+		light.energy = 1.5  # Less intense than Orb (which uses 2.0+)
+		print("Enemy: Possession light activated")
+	else:
+		print("Enemy: Warning - PointLight2D not found!")
+
+func _deactivate_possession_light() -> void:
+	if light:
+		light.enabled = false
+		print("Enemy: Possession light deactivated")
+	else:
+		print("Enemy: Warning - PointLight2D not found!")
