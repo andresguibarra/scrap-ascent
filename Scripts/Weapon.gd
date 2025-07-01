@@ -105,7 +105,16 @@ func _launch_projectile(projectile: Projectile) -> void:
 func _apply_recoil_if_needed() -> void:
 	if not is_held:
 		var knockback_direction := Vector2(-1 if facing_right else 1, 0)
+		# Clear any existing horizontal velocity to ensure consistent knockback
+		linear_velocity.x = 0
+		# Apply fresh knockback with additional force to overcome friction
 		linear_velocity += knockback_direction * knockback_force
+		
+		# Add a small upward component to help the weapon move over small obstacles
+		if abs(linear_velocity.y) < 50:  # Only if not already moving vertically
+			linear_velocity.y -= 50  # Small upward impulse
+		
+		print("Weapon: Knockback applied - direction: ", knockback_direction, " velocity: ", linear_velocity)
 
 # =============================================================================
 # WEAPON POSITIONING AND DIRECTION

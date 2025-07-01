@@ -152,3 +152,6 @@ shadow_enabled = true
 shadow_filter = 1
 texture = ExtResource("3_jgmpi")
 texture_scale = 0.05
+
+[node name="LineOfSight" type="RayCast2D" parent="."]
+collision_mask = 5

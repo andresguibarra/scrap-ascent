@@ -2,8 +2,13 @@ extends CharacterBody2D
 
 @export var speed := 200.0
 @export var possession_range := 100.0  # Increased for testing
+@export var attraction_speed := 800.0  # Speed when moving towards enemy for possession
 var controlled = true
 var gravity: float = ProjectSettings.get_setting("physics/2d/default_gravity")
+
+# Possession state
+var is_possessing: bool = false
+var target_enemy: Enemy = null
 
 # Light pulsing variables
 var base_light_energy: float = 1.0
@@ -13,14 +18,20 @@ var light_time: float = 0.0
 
 @onready var animated_sprite: AnimatedSprite2D = $AnimatedSprite2D
 @onready var light: PointLight2D = $PointLight2D
+@onready var line_of_sight: RayCast2D = $LineOfSight
 
 func _ready() -> void:
 	name = "Orb"
 	add_to_group("player")
 	_play_idle_animation()
 	_setup_light_pulsing()
+	_setup_line_of_sight()
 
 func _process(delta: float) -> void:
+	if is_possessing:
+		_handle_possession_movement(delta)
+		return
+	
 	var direction: Vector2 = InputManager.get_movement_input()
 	
 	# Orb horizontal movement
@@ -41,6 +52,43 @@ func _process(delta: float) -> void:
 	
 	move_and_slide()
 	_update_light_pulsing(delta)
+
+func _handle_possession_movement(_delta: float) -> void:
+	if not target_enemy or not is_instance_valid(target_enemy):
+		print("Orb: Target enemy lost during possession")
+		_cancel_possession()
+		return
+	
+	# Check if line of sight is still clear during movement
+	if not _has_clear_line_of_sight(target_enemy):
+		print("Orb: Line of sight lost during possession")
+		_cancel_possession()
+		return
+	
+	# Move towards the target enemy with increasing speed as we get closer
+	var direction_to_enemy := (target_enemy.global_position - global_position).normalized()
+	var distance_to_enemy := global_position.distance_to(target_enemy.global_position)
+	
+	# Speed up as we get closer for dramatic effect
+	var current_speed := attraction_speed
+	if distance_to_enemy < 50.0:
+		current_speed = attraction_speed * 1.5  # 50% faster when close
+	
+	velocity = direction_to_enemy * current_speed
+	
+	# Update animation based on movement direction
+	if abs(direction_to_enemy.x) > 0.1:
+		_play_movement_animation(direction_to_enemy.x)
+	
+	# Enhanced light effect during possession
+	_update_light_intensity(true)
+	
+	# Check if we're close enough to complete possession
+	if distance_to_enemy < 20.0:  # Close enough to possess
+		_complete_possession()
+		return
+	
+	move_and_slide()
 
 # =============================================================================
 # LIGHTING EFFECTS
@@ -87,7 +135,14 @@ func _play_movement_animation(direction_x: float) -> void:
 # INPUT HANDLING
 # =============================================================================
 func _unhandled_input(_event: InputEvent) -> void:
-	if controlled and InputManager.is_possess_just_pressed():
+	if is_possessing:
+		# Allow cancelling possession with movement input
+		var direction: Vector2 = InputManager.get_movement_input()
+		if direction.length() > 0.1:
+			print("Orb: Possession cancelled by player input")
+			_cancel_possession()
+			get_viewport().set_input_as_handled()
+	elif controlled and InputManager.is_possess_just_pressed():
 		print("Orb: attempting possession")
 		_attempt_possession()
 		get_viewport().set_input_as_handled()
@@ -95,16 +150,21 @@ func _unhandled_input(_event: InputEvent) -> void:
 func _attempt_possession() -> void:
 	var enemy := _find_nearest_enemy()
 	if enemy:
+		print("Orb: Starting possession sequence towards enemy")
+		is_possessing = true
+		target_enemy = enemy
+		controlled = false  # Stop responding to normal input
 		_flash_light_on_possession()
-		controlled = false  # Reset orb control state
-		enemy.posses()
-		queue_free()
+	else:
+		print("Orb: No valid enemy found for possession")
 
 func _flash_light_on_possession() -> void:
 	if light:
-		# Brief flash effect before possession
-		light.energy = 3.0
+		# Enhanced light effect during possession
+		light.energy = 4.0
 		light.range_item_cull_mask = 4  # Increase range momentarily
+		base_light_energy = 3.0  # Keep it bright during possession
+		pulse_amplitude = 1.0    # Intense pulsing during possession
 
 func _find_nearest_enemy() -> Enemy:
 	var enemies := get_tree().get_nodes_in_group("enemies")
@@ -118,13 +178,64 @@ func _find_nearest_enemy() -> Enemy:
 			var distance := global_position.distance_to(enemy.global_position)
 			print("Enemy at distance: ", distance, " controlled: ", enemy.is_controlled())
 			
-			# Can possess any enemy that's not currently controlled
-			if not enemy.is_controlled()  and distance < shortest_distance:
-				shortest_distance = distance
-				nearest = enemy
-				print("Found valid enemy at distance: ", shortest_distance)
+			# Can possess any enemy that's not currently controlled and is in range
+			if not enemy.is_controlled() and distance < shortest_distance:
+				# Check if there's a clear line of sight to the enemy
+				if _has_clear_line_of_sight(enemy):
+					shortest_distance = distance
+					nearest = enemy
+					print("Found valid enemy at distance: ", shortest_distance)
+				else:
+					print("Enemy at distance ", distance, " blocked by obstacle")
 	
 	return nearest
 
 func _is_in_range(enemy: Enemy) -> bool:
 	return global_position.distance_to(enemy.global_position) <= possession_range
+
+func _cancel_possession() -> void:
+	print("Orb: Possession cancelled")
+	is_possessing = false
+	target_enemy = null
+	controlled = true
+
+func _complete_possession() -> void:
+	print("Orb: Possession completed")
+	if target_enemy:
+		_flash_light_on_possession()
+		target_enemy.posses()
+	queue_free()
+
+func _setup_line_of_sight() -> void:
+	if line_of_sight:
+		line_of_sight.enabled = true
+		line_of_sight.collision_mask = 5  # Collide with world (1) and enemy (4) layers
+		print("Orb: Line of sight raycast initialized")
+	else:
+		print("Orb: Warning - LineOfSight RayCast2D not found!")
+
+func _has_clear_line_of_sight(enemy: Enemy) -> bool:
+	if not line_of_sight or not enemy:
+		return false
+	
+	# Set raycast target to the enemy's position
+	var direction_to_enemy := enemy.global_position - global_position
+	line_of_sight.target_position = direction_to_enemy
+	
+	# Force update the raycast
+	line_of_sight.force_raycast_update()
+	
+	# If the raycast is colliding, check what we're hitting
+	if line_of_sight.is_colliding():
+		var collider = line_of_sight.get_collider()
+		
+		# If we hit the target enemy or any enemy, that's acceptable
+		if collider == enemy or collider is Enemy:
+			return true
+		
+		# If we hit something else (walls, platforms), there's an obstacle
+		print("Orb: Line of sight blocked by: ", collider.name if collider else "unknown")
+		return false
+	
+	# If not colliding with anything, there's a clear path
+	return true
