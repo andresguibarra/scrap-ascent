@@ -181,6 +181,7 @@ When controlling Armed Enemies, you gain access to a sophisticated weapon system
 - **Centralized Input Management**: Clean input handling via InputManager singleton
 - **Physics-Based Movement**: Realistic gravity and collision detection
 - **Dynamic Camera System**: Smart camera that follows active character
+- **Visual Effects System**: Dual particle systems and dynamic lighting for enhanced feedback
 
 ## 🎨 Visual Style & Feedback
 - **Minimalist geometric art style** with colored rectangles representing characters
@@ -192,6 +193,11 @@ When controlling Armed Enemies, you gain access to a sophisticated weapon system
   - 🔵 Blue robots = Tier 2 enemies with dash ability
   - 🟣 Purple robots = Tier 3 enemies with all abilities
   - 🟠 Orange robots = Armed enemies with weapons
+- **Dynamic Visual Effects**:
+  - Pulsing light effects on the Orb that intensify during movement and possession
+  - Particle trails that change intensity based on Orb activity (idle, moving, possessing)
+  - Color-matched damage particles when enemies are destroyed
+  - Enhanced lighting during possession sequences
 - **Smooth physics-based movement** and collision detection
 - **Dynamic camera** that intelligently follows your active character
 
@@ -204,6 +210,7 @@ This is a demonstration/prototype showcasing the core possession mechanics. The 
 - ✅ Testing environment with multiple platforms
 - ✅ Smart camera system that follows active character
 - ✅ Complete input management system
+- ✅ Dynamic visual effects system (particles, lighting, damage effects)
 
 ### Testing the Game
 The game currently runs in a testing environment (`TestingMechanics.tscn`) that includes:
@@ -211,6 +218,7 @@ The game currently runs in a testing environment (`TestingMechanics.tscn`) that 
 - One of each enemy type to test possession mechanics
 - Weapons for combat testing
 - Camera system demonstration
+- Visual effects showcase (particle systems, lighting, damage effects)
 
 ## 🤝 Contributing
 Contributions are welcome! Feel free to:
