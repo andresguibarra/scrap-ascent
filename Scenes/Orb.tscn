@@ -1,4 +1,4 @@
-[gd_scene load_steps=21 format=3 uid="uid://c8h3d5k2nap1q"]
+[gd_scene load_steps=22 format=3 uid="uid://c8h3d5k2nap1q"]
 
 [ext_resource type="Script" uid="uid://b0xdnweui2g1u" path="res://Scripts/Orb.gd" id="1_orb"]
 [ext_resource type="Texture2D" uid="uid://dn6x783lgyhe2" path="res://Assets/Orb.png" id="2_6cxvw"]
@@ -130,6 +130,18 @@ animations = [{
 "speed": 5.0
 }]
 
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_jgmpi"]
+particle_flag_disable_z = true
+emission_shape = 1
+emission_sphere_radius = 2.0
+direction = Vector3(0, -1, 0)
+spread = 180.0
+initial_velocity_min = 2.0
+initial_velocity_max = 10.0
+gravity = Vector3(0, 0, 0)
+scale_min = 0.08
+color = Color(0.565, 0.925, 0.949, 0.9)
+
 [node name="Orb" type="CharacterBody2D"]
 collision_layer = 8
 script = ExtResource("1_orb")
@@ -155,3 +167,16 @@ texture_scale = 0.05
 
 [node name="LineOfSight" type="RayCast2D" parent="."]
 collision_mask = 5
+
+[node name="Particles" type="GPUParticles2D" parent="."]
+z_index = -1
+amount = 16
+lifetime = 1.5
+process_material = SubResource("ParticleProcessMaterial_jgmpi")
+
+[node name="ParticlesIntense" type="GPUParticles2D" parent="."]
+z_index = -1
+emitting = false
+amount = 20
+lifetime = 1.2
+process_material = SubResource("ParticleProcessMaterial_jgmpi")

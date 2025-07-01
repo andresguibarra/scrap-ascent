@@ -16,9 +16,16 @@ var pulse_speed: float = 2.0
 var pulse_amplitude: float = 0.5
 var light_time: float = 0.0
 
+# Particle default values (your preferred settings)
+var default_particle_amount: int = 16
+var default_velocity_min: float = 2.0
+var default_velocity_max: float = 20.0
+
 @onready var animated_sprite: AnimatedSprite2D = $AnimatedSprite2D
 @onready var light: PointLight2D = $PointLight2D
 @onready var line_of_sight: RayCast2D = $LineOfSight
+@onready var particles: GPUParticles2D = $Particles
+@onready var particles_intense: GPUParticles2D = $ParticlesIntense
 
 func _ready() -> void:
 	name = "Orb"
@@ -26,6 +33,7 @@ func _ready() -> void:
 	_play_idle_animation()
 	_setup_light_pulsing()
 	_setup_line_of_sight()
+	_setup_particles()
 
 func _process(delta: float) -> void:
 	if is_possessing:
@@ -83,6 +91,9 @@ func _handle_possession_movement(_delta: float) -> void:
 	# Enhanced light effect during possession
 	_update_light_intensity(true)
 	
+	# Extra intense particle trail during possession
+	_set_particle_parameters("possession")
+	
 	# Check if we're close enough to complete possession
 	if distance_to_enemy < 20.0:  # Close enough to possess
 		_complete_possession()
@@ -118,6 +129,62 @@ func _update_light_intensity(is_moving: bool) -> void:
 	else:
 		base_light_energy = 2.0  # Normal brightness when idle
 		pulse_amplitude = 0.5    # Gentle pulsing
+	
+	# Update particle intensity based on movement
+	_update_particle_intensity(is_moving)
+
+func _update_particle_intensity(is_moving: bool) -> void:
+	if is_moving:
+		_set_particle_parameters("moving")
+	else:
+		_set_particle_parameters("idle")
+
+func _set_particle_parameters(state: String) -> void:
+	if not particles or not particles_intense:
+		return
+		
+	var particle_material = particles.process_material as ParticleProcessMaterial
+	var particle_material_intense = particles_intense.process_material as ParticleProcessMaterial
+	
+	if not particle_material or not particle_material_intense:
+		return
+	
+	match state:
+		"idle":
+			# Base particles always on, intense particles off
+			particles.emitting = true
+			particles_intense.emitting = false
+			# Reset velocities to default for base particles
+			particle_material.initial_velocity_max = default_velocity_max
+			particle_material.initial_velocity_min = default_velocity_min
+			
+		"moving":
+			# Both particle systems active
+			particles.emitting = true
+			particles_intense.emitting = true
+			# Boost velocities for movement
+			particle_material.initial_velocity_max = default_velocity_max + 5.0
+			particle_material.initial_velocity_min = default_velocity_min + 2.0
+			particle_material_intense.initial_velocity_max = default_velocity_max + 10.0
+			particle_material_intense.initial_velocity_min = default_velocity_min + 5.0
+			
+		"possession":
+			# Both systems with high intensity
+			particles.emitting = true
+			particles_intense.emitting = true
+			particle_material.initial_velocity_max = default_velocity_max + 8.0
+			particle_material.initial_velocity_min = default_velocity_min + 4.0
+			particle_material_intense.initial_velocity_max = default_velocity_max + 15.0
+			particle_material_intense.initial_velocity_min = default_velocity_min + 8.0
+			
+		"flash":
+			# Maximum intensity for flash effect
+			particles.emitting = true
+			particles_intense.emitting = true
+			particle_material.initial_velocity_max = default_velocity_max + 10.0
+			particle_material.initial_velocity_min = default_velocity_min + 5.0
+			particle_material_intense.initial_velocity_max = default_velocity_max + 20.0
+			particle_material_intense.initial_velocity_min = default_velocity_min + 10.0
 
 # =============================================================================
 # ANIMATION MANAGEMENT
@@ -165,6 +232,9 @@ func _flash_light_on_possession() -> void:
 		light.range_item_cull_mask = 4  # Increase range momentarily
 		base_light_energy = 3.0  # Keep it bright during possession
 		pulse_amplitude = 1.0    # Intense pulsing during possession
+	
+	# Enhanced particle effect during possession
+	_set_particle_parameters("flash")
 
 func _find_nearest_enemy() -> Enemy:
 	var enemies := get_tree().get_nodes_in_group("enemies")
@@ -198,6 +268,10 @@ func _cancel_possession() -> void:
 	is_possessing = false
 	target_enemy = null
 	controlled = true
+	_reset_particle_effects()
+
+func _reset_particle_effects() -> void:
+	_set_particle_parameters("idle")
 
 func _complete_possession() -> void:
 	print("Orb: Possession completed")
@@ -213,6 +287,20 @@ func _setup_line_of_sight() -> void:
 		print("Orb: Line of sight raycast initialized")
 	else:
 		print("Orb: Warning - LineOfSight RayCast2D not found!")
+
+func _setup_particles() -> void:
+	if particles and particles_intense:
+		# Base particles always emitting
+		particles.emitting = true
+		particles.amount = default_particle_amount
+		
+		# Intense particles start disabled
+		particles_intense.emitting = false
+		particles_intense.amount = 20  # Higher amount for intense effects
+		
+		print("Orb: Dual particle system initialized")
+	else:
+		print("Orb: Warning - Particle nodes not found!")
 
 func _has_clear_line_of_sight(enemy: Enemy) -> bool:
 	if not line_of_sight or not enemy:
