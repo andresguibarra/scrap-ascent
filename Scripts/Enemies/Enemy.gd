@@ -15,6 +15,8 @@ var skills = {
 @export var ai_speed: float = 100.0
 @export var dash_speed: float = 500.0
 @export var dash_duration: float = 0.2
+@export var coyote_time: float = 0.1
+@export var jump_buffer_time: float = 0.1
 
 var gravity: float = ProjectSettings.get_setting("physics/2d/default_gravity")
 var current_state: State = State.AI
@@ -26,6 +28,11 @@ var dash_timer: float = 0.0
 var jumps_remaining: int = 0
 var max_jumps: int = 1
 var can_dash_in_air: bool = true
+
+# Coyote time and jump buffering
+var coyote_timer: float = 0.0
+var was_on_floor: bool = false
+var jump_buffer_timer: float = 0.0
 
 # Weapon reference (instantiated if has_weapon = true)
 var weapon_instance: Weapon = null
@@ -105,15 +112,38 @@ func _update_timers(delta: float) -> void:
 		dash_timer -= delta
 		if dash_timer <= 0.0:
 			is_dashing = false
+	
+	# Update coyote timer
+	if coyote_timer > 0.0:
+		coyote_timer -= delta
+	
+	# Update jump buffer timer
+	if jump_buffer_timer > 0.0:
+		jump_buffer_timer -= delta
 
 func _update_physics(delta: float) -> void:
+	var currently_on_floor = is_on_floor()
+	
+	# Handle coyote time - start timer when leaving ground
+	if was_on_floor and not currently_on_floor:
+		coyote_timer = coyote_time
+	
 	# Reset abilities when touching ground
-	if is_on_floor():
+	if currently_on_floor:
 		jumps_remaining = max_jumps
 		can_dash_in_air = true
+		coyote_timer = 0.0
+		
+		# Execute buffered jump if there's one
+		if jump_buffer_timer > 0.0:
+			_execute_jump()
+			jump_buffer_timer = 0.0
+	
+	# Update was_on_floor for next frame
+	was_on_floor = currently_on_floor
 	
 	# Apply gravity (unless dashing)
-	if not is_on_floor() and not is_dashing:
+	if not currently_on_floor and not is_dashing:
 		velocity.y += gravity * delta
 
 func _handle_state_logic() -> void:
@@ -185,9 +215,37 @@ func _apply_horizontal_movement(direction_x: float) -> void:
 
 func _apply_jump(jump_input: bool) -> void:
 	var tier_skills = skills.get(tier, [Skill.MOVE, Skill.JUMP])
-	if jump_input and Skill.JUMP in tier_skills and jumps_remaining > 0:
-		velocity.y = jump_velocity
-		jumps_remaining -= 1
+	if not (Skill.JUMP in tier_skills):
+		return
+	
+	if jump_input:
+		# Check if we can jump immediately (on floor or coyote time)
+		var can_jump_now = (is_on_floor() or coyote_timer > 0.0) and jumps_remaining > 0
+		
+		if can_jump_now:
+			_execute_jump()
+			if not is_on_floor():
+				coyote_timer = 0.0  # Used coyote time
+		else:
+			# Check if we have remaining jumps for double/multi jump
+			if jumps_remaining > 0:
+				_execute_jump()
+			else:
+				# Buffer the jump for when we land
+				jump_buffer_timer = jump_buffer_time
+				print("Jump buffered! Will execute on landing.")
+
+func _execute_jump() -> void:
+	velocity.y = jump_velocity
+	jumps_remaining -= 1
+	
+	# Debug feedback
+	if coyote_timer > 0.0 and not is_on_floor():
+		print("Coyote jump executed!")
+	elif jump_buffer_timer > 0.0:
+		print("Buffered jump executed!")
+	else:
+		print("Normal jump executed!")
 
 func _perform_dash(direction: float) -> void:
 	is_dashing = true
@@ -262,7 +320,7 @@ func _has_wall_ahead(direction: float) -> bool:
 	if not wall_raycast:
 		return false
 		
-	wall_raycast.target_position = Vector2(20 * direction, 0)
+	wall_raycast.target_position = Vector2(8.1 * direction, 0)
 	wall_raycast.force_raycast_update()
 	
 	return wall_raycast.is_colliding()
