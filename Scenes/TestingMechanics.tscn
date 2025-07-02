@@ -32,20 +32,24 @@ position = Vector2(466, 339)
 
 [node name="Enemy_Tier1" parent="." instance=ExtResource("2_enemy")]
 position = Vector2(350, 350)
+jump_velocity = -360.0
 
 [node name="Enemy_Tier2_Armed" parent="." instance=ExtResource("2_enemy")]
 position = Vector2(218, 253)
 tier = 2
 has_weapon = true
+jump_velocity = -360.0
 
 [node name="Enemy_Tier3" parent="." instance=ExtResource("2_enemy")]
 position = Vector2(574, 203)
 tier = 3
+jump_velocity = -360.0
 
 [node name="Enemy_Tier4_Armed" parent="." instance=ExtResource("2_enemy")]
 position = Vector2(284, 354)
 tier = 4
 has_weapon = true
+jump_velocity = -360.0
 
 [node name="Camera2D" type="Camera2D" parent="."]
 position = Vector2(400, 300)

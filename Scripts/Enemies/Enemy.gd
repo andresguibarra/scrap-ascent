@@ -5,18 +5,18 @@ enum State { AI, INERT, CONTROLLED }
 enum Skill { MOVE, JUMP, DOUBLE_JUMP, DASH }
 var skills = {
 	1: [Skill.MOVE, Skill.JUMP],
-	2: [Skill.MOVE, Skill.JUMP],
-	3: [Skill.MOVE, Skill.JUMP, Skill.DASH],
-	4: [Skill.MOVE, Skill.JUMP, Skill.DOUBLE_JUMP, Skill.DASH],
+	2: [Skill.MOVE, Skill.JUMP, Skill.DASH],
+	3: [Skill.MOVE, Skill.JUMP, Skill.DOUBLE_JUMP, Skill.DASH],
 }
 @export var tier = 1
 @export var has_weapon = false
-@export var jump_velocity: float = -600.0
+@export var jump_velocity: float = -360.0
 @export var ai_speed: float = 100.0
 @export var dash_speed: float = 500.0
-@export var dash_duration: float = 0.2
+@export var dash_duration: float = 0.13
 @export var coyote_time: float = 0.1
-@export var jump_buffer_time: float = 0.1
+@export var jump_buffer_time: float = 0.01
+@export var flip_cooldown_time: float = 0.5  # Time to wait before allowing another flip
 
 var gravity: float = ProjectSettings.get_setting("physics/2d/default_gravity")
 var current_state: State = State.AI
@@ -36,6 +36,10 @@ var jump_buffer_timer: float = 0.0
 
 # Weapon reference (instantiated if has_weapon = true)
 var weapon_instance: Weapon = null
+
+# Flip cooldown tracking
+var flip_cooldown_timer: float = 0.0
+var last_flip_direction: float = 0.0
 
 @onready var edge_raycast: RayCast2D = $EdgeRayCast2D
 @onready var wall_raycast: RayCast2D = $WallRayCast2D
@@ -98,7 +102,14 @@ func _instantiate_weapon() -> void:
 
 func _print_configuration_debug() -> void:
 	var tier_skills = skills.get(tier, [])
-	print("Enemy configured - Tier: ", tier, ", Has Weapon: ", has_weapon, ", Skills: ", tier_skills)
+	var tier_color_name = ""
+	match tier:
+		1: tier_color_name = "Red"
+		2: tier_color_name = "Blue" 
+		3: tier_color_name = "Orange"
+		_: tier_color_name = "Purple"
+	
+	print("Enemy configured - Tier: ", tier, " (", tier_color_name, "), Has Weapon: ", has_weapon, ", Skills: ", tier_skills)
 
 func _process(delta: float) -> void:
 	_update_timers(delta)
@@ -120,6 +131,10 @@ func _update_timers(delta: float) -> void:
 	# Update jump buffer timer
 	if jump_buffer_timer > 0.0:
 		jump_buffer_timer -= delta
+	
+	# Update flip cooldown timer
+	if flip_cooldown_timer > 0.0:
+		flip_cooldown_timer -= delta
 
 func _update_physics(delta: float) -> void:
 	var currently_on_floor = is_on_floor()
@@ -127,6 +142,9 @@ func _update_physics(delta: float) -> void:
 	# Handle coyote time - start timer when leaving ground
 	if was_on_floor and not currently_on_floor:
 		coyote_timer = coyote_time
+		# When leaving the ground, consume the first jump if we didn't jump
+		if jumps_remaining == max_jumps:
+			jumps_remaining -= 1
 	
 	# Reset abilities when touching ground
 	if currently_on_floor:
@@ -208,7 +226,7 @@ func _should_dash(dash_input: bool, direction: Vector2) -> bool:
 
 func _apply_horizontal_movement(direction_x: float) -> void:
 	if direction_x != 0:
-		velocity.x = direction_x * ai_speed * 2.0
+		velocity.x = direction_x * ai_speed * 1.5
 		_flip_to_direction(direction_x)
 	else:
 		velocity.x = move_toward(velocity.x, 0, ai_speed * 2.0)
@@ -219,21 +237,21 @@ func _apply_jump(jump_input: bool) -> void:
 		return
 	
 	if jump_input:
-		# Check if we can jump immediately (on floor or coyote time)
-		var can_jump_now = (is_on_floor() or coyote_timer > 0.0) and jumps_remaining > 0
+		# Check if we can use coyote time (recently left ground)
+		var can_coyote_jump = coyote_timer > 0.0 and not is_on_floor()
+		# Check if we're on floor and have jumps
+		var can_ground_jump = is_on_floor() and jumps_remaining > 0
+		# Check if we can do air jump (double jump, etc.)
+		var can_air_jump = not is_on_floor() and coyote_timer <= 0.0 and jumps_remaining > 0
 		
-		if can_jump_now:
+		if can_ground_jump or can_coyote_jump or can_air_jump:
 			_execute_jump()
-			if not is_on_floor():
+			if can_coyote_jump:
 				coyote_timer = 0.0  # Used coyote time
 		else:
-			# Check if we have remaining jumps for double/multi jump
-			if jumps_remaining > 0:
-				_execute_jump()
-			else:
-				# Buffer the jump for when we land
-				jump_buffer_timer = jump_buffer_time
-				print("Jump buffered! Will execute on landing.")
+			# Buffer the jump for when we land
+			jump_buffer_timer = jump_buffer_time
+			print("Jump buffered! Will execute on landing.")
 
 func _execute_jump() -> void:
 	velocity.y = jump_velocity
@@ -300,9 +318,17 @@ func _handle_ai_patrol() -> void:
 	
 	if _should_turn_around(current_direction):
 		_turn_around()
+		# If we couldn't turn around due to cooldown, stop moving
+		if flip_cooldown_timer > 0.0:
+			velocity.x = 0.0
+			return
 		current_direction *= -1
 	
-	velocity.x = current_direction * ai_speed
+	# Only move if we're not in flip cooldown or if we can move safely
+	if flip_cooldown_timer <= 0.0 or not _should_turn_around(current_direction):
+		velocity.x = current_direction * ai_speed
+	else:
+		velocity.x = 0.0
 
 func _should_turn_around(direction: float) -> bool:
 	return _has_edge_ahead(direction) or _has_wall_ahead(direction)
@@ -326,8 +352,20 @@ func _has_wall_ahead(direction: float) -> bool:
 	return wall_raycast.is_colliding()
 
 func _turn_around() -> void:
+	# Check if we're still in flip cooldown
+	if flip_cooldown_timer > 0.0:
+		return
+	
 	var current_direction := get_facing_direction()
-	_flip_to_direction(-current_direction)
+	var new_direction = -current_direction
+	
+	# Avoid flipping back to the same direction we just came from
+	if new_direction == last_flip_direction and flip_cooldown_timer > 0.0:
+		return
+	
+	_flip_to_direction(new_direction)
+	last_flip_direction = new_direction
+	flip_cooldown_timer = flip_cooldown_time
 
 func _handle_inert_movement() -> void:
 	velocity.x = move_toward(velocity.x, 0, ai_speed * 2.0)
@@ -351,7 +389,16 @@ func _drop_weapon_on_destroy() -> void:
 func _update_visual_state() -> void:
 	match current_state:
 		State.AI:
-			animated_sprite.modulate = Color(0.8, 0.4, 0.4, 1.0)  # Red when AI
+			# Different colors for each tier
+			match tier:
+				1:
+					animated_sprite.modulate = Color(0.8, 0.4, 0.4, 1.0)  # Red for tier 1
+				2:
+					animated_sprite.modulate = Color(0.4, 0.6, 0.9, 1.0)  # Blue for tier 2
+				3:
+					animated_sprite.modulate = Color(0.9, 0.6, 0.2, 1.0)  # Orange for tier 3
+				_:
+					animated_sprite.modulate = Color(0.7, 0.3, 0.8, 1.0)  # Purple for tier 4+
 		State.INERT:
 			animated_sprite.modulate = Color(0.3, 0.3, 0.3, 1.0)  # Gray when inert
 		State.CONTROLLED:
