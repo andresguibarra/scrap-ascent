@@ -11,7 +11,7 @@ var facing_right: bool = true
 var is_being_attracted: bool = false
 var shoot_timer: float = 0.0
 
-@onready var holder: Node2D
+var holder: Node2D
 @onready var shoot_point: Marker2D = $ShootPoint
 @onready var sprite: Sprite2D = $Sprite2D
 
@@ -211,6 +211,13 @@ func _add_holder_momentum(throw_velocity: Vector2) -> void:
 func return_to_holder() -> void:
 	if holder:
 		is_being_attracted = true
+
+func set_new_holder(new_holder: Node2D) -> void:
+	if new_holder and new_holder.has_method("is_controlled"):
+		holder = new_holder
+		return_to_holder()
+	else:
+		print("Weapon: Cannot set invalid holder - missing is_controlled method")
 
 func _handle_attraction_movement() -> void:
 	if not holder:

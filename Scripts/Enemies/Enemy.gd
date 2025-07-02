@@ -20,6 +20,7 @@ var skills = {
 @export var wall_slide_speed: float = 50.0  # Speed when sliding down a wall
 @export var wall_jump_velocity: Vector2 = Vector2(250.0, -300.0)  # Horizontal and vertical push from wall
 @export var wall_jump_cooldown_time: float = 0.6  # Time before can grab same wall again
+@export var weapon_pickup_range: float = 40.0  # Distance at which enemy can detect and pick up weapons
 
 # Tier colors for AI state
 @export var tier_1_color: Color = Color(0.8, 0.4, 0.4, 1.0)  # Red
@@ -479,6 +480,10 @@ func _handle_ai_patrol() -> void:
 	if is_wall_sliding:
 		is_wall_sliding = false
 	
+	# Check for nearby weapons to pick up (only if we don't already have one)
+	if not weapon_instance:
+		_check_for_nearby_weapons()
+	
 	if _should_turn_around(current_direction):
 		_turn_around()
 		# If we couldn't turn around due to cooldown, stop moving
@@ -495,6 +500,28 @@ func _handle_ai_patrol() -> void:
 
 func _should_turn_around(direction: float) -> bool:
 	return _has_edge_ahead(direction) or _has_wall_ahead(direction)
+
+func _check_for_nearby_weapons() -> void:
+	var weapons := get_tree().get_nodes_in_group("weapons")
+	var nearest_weapon: Weapon = null
+	var shortest_distance := weapon_pickup_range + 1.0
+	
+	for weapon in weapons:
+		if weapon is Weapon and not weapon.is_held:
+			var distance := global_position.distance_to(weapon.global_position)
+			if distance < shortest_distance and distance <= weapon_pickup_range:
+				shortest_distance = distance
+				nearest_weapon = weapon
+	
+	if nearest_weapon:
+		_pick_up_weapon(nearest_weapon)
+
+func _pick_up_weapon(weapon: Weapon) -> void:
+	# Set this enemy as the new holder
+	weapon.set_new_holder(self)
+	weapon_instance = weapon
+	
+	print("Enemy: Picking up weapon at distance: ", global_position.distance_to(weapon.global_position))
 
 func _has_edge_ahead(direction: float) -> bool:
 	if not edge_raycast:
