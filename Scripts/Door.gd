@@ -117,7 +117,7 @@ func _crush_enemy(enemy: CharacterBody2D) -> void:
 		dir = 1  # Default to right if centered
 	
 	# Move enemy completely out of door area (2 tiles = 32 pixels to ensure clearance)
-	var displacement = dir * 32
+	var displacement = dir * 17
 	enemy.global_position.x += displacement
 	
 	# Ensure enemy is aligned to tile grid (16px tiles)
