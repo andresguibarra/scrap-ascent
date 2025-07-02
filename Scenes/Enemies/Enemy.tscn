@@ -108,6 +108,14 @@ animations = [{
 "loop": true,
 "name": &"MoveLeft",
 "speed": 10.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_qwcx1")
+}],
+"loop": true,
+"name": &"WallSlide",
+"speed": 3.0
 }]
 
 [sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_damage"]
@@ -183,6 +191,14 @@ animations = [{
 "loop": true,
 "name": &"MoveLeft",
 "speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_i4j8h")
+}],
+"loop": true,
+"name": &"WallSlide",
+"speed": 3.0
 }]
 
 [node name="Enemy" type="CharacterBody2D" groups=["enemies"]]
@@ -199,6 +215,12 @@ target_position = Vector2(15, 15)
 
 [node name="WallRayCast2D" type="RayCast2D" parent="."]
 target_position = Vector2(8, 0)
+
+[node name="WallLeftRayCast2D" type="RayCast2D" parent="."]
+target_position = Vector2(-10, 0)
+
+[node name="WallRightRayCast2D" type="RayCast2D" parent="."]
+target_position = Vector2(10, 0)
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
 sprite_frames = SubResource("SpriteFrames_rybfp")

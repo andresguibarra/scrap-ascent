@@ -2,11 +2,11 @@ extends CharacterBody2D
 class_name Enemy
 
 enum State { AI, INERT, CONTROLLED }
-enum Skill { MOVE, JUMP, DOUBLE_JUMP, DASH }
+enum Skill { MOVE, JUMP, DOUBLE_JUMP, DASH, WALL_CLIMB }
 var skills = {
 	1: [Skill.MOVE, Skill.JUMP],
-	2: [Skill.MOVE, Skill.JUMP, Skill.DASH],
-	3: [Skill.MOVE, Skill.JUMP, Skill.DOUBLE_JUMP, Skill.DASH],
+	2: [Skill.MOVE, Skill.JUMP, Skill.DASH, Skill.WALL_CLIMB],
+	3: [Skill.MOVE, Skill.JUMP, Skill.DOUBLE_JUMP, Skill.DASH, Skill.WALL_CLIMB],
 }
 @export var tier = 1
 @export var has_weapon = false
@@ -17,6 +17,9 @@ var skills = {
 @export var coyote_time: float = 0.1
 @export var jump_buffer_time: float = 0.01
 @export var flip_cooldown_time: float = 0.5  # Time to wait before allowing another flip
+@export var wall_slide_speed: float = 50.0  # Speed when sliding down a wall
+@export var wall_jump_velocity: Vector2 = Vector2(250.0, -300.0)  # Horizontal and vertical push from wall
+@export var wall_jump_cooldown_time: float = 0.6  # Time before can grab same wall again
 
 # Tier colors for AI state
 @export var tier_1_color: Color = Color(0.8, 0.4, 0.4, 1.0)  # Red
@@ -33,6 +36,12 @@ var current_state: State = State.AI
 var chip_destroyed: bool = false
 var is_dashing: bool = false
 var dash_timer: float = 0.0
+
+# Wall climbing state
+var is_wall_sliding: bool = false
+var wall_normal: Vector2 = Vector2.ZERO
+var wall_jump_cooldown_timer: float = 0.0
+var last_wall_normal: Vector2 = Vector2.ZERO  # Track which wall we last jumped from
 
 # Jump and dash tracking
 var jumps_remaining: int = 0
@@ -53,6 +62,8 @@ var last_flip_direction: float = 0.0
 
 @onready var edge_raycast: RayCast2D = $EdgeRayCast2D
 @onready var wall_raycast: RayCast2D = $WallRayCast2D
+@onready var wall_left_raycast: RayCast2D = $WallLeftRayCast2D
+@onready var wall_right_raycast: RayCast2D = $WallRightRayCast2D
 @onready var animated_sprite: AnimatedSprite2D = $AnimatedSprite2D
 @onready var eyes_sprite: AnimatedSprite2D = $Eyes
 @onready var light: PointLight2D = $PointLight2D
@@ -119,7 +130,16 @@ func _print_configuration_debug() -> void:
 		3: tier_color_name = "Orange"
 		_: tier_color_name = "Purple"
 	
-	print("Enemy configured - Tier: ", tier, " (", tier_color_name, "), Has Weapon: ", has_weapon, ", Skills: ", tier_skills)
+	var skill_names = []
+	for skill in tier_skills:
+		match skill:
+			Skill.MOVE: skill_names.append("MOVE")
+			Skill.JUMP: skill_names.append("JUMP")
+			Skill.DOUBLE_JUMP: skill_names.append("DOUBLE_JUMP")
+			Skill.DASH: skill_names.append("DASH")
+			Skill.WALL_CLIMB: skill_names.append("WALL_CLIMB")
+	
+	print("Enemy configured - Tier: ", tier, " (", tier_color_name, "), Has Weapon: ", has_weapon, ", Skills: ", skill_names)
 
 func _process(delta: float) -> void:
 	_update_timers(delta)
@@ -145,6 +165,10 @@ func _update_timers(delta: float) -> void:
 	# Update flip cooldown timer
 	if flip_cooldown_timer > 0.0:
 		flip_cooldown_timer -= delta
+	
+	# Update wall jump cooldown timer
+	if wall_jump_cooldown_timer > 0.0:
+		wall_jump_cooldown_timer -= delta
 
 func _update_physics(delta: float) -> void:
 	var currently_on_floor = is_on_floor()
@@ -161,6 +185,9 @@ func _update_physics(delta: float) -> void:
 		jumps_remaining = max_jumps
 		can_dash_in_air = true
 		coyote_timer = 0.0
+		is_wall_sliding = false  # Stop wall sliding when on floor
+		wall_jump_cooldown_timer = 0.0  # Reset wall jump cooldown when on ground
+		last_wall_normal = Vector2.ZERO  # Clear wall memory when on ground
 		
 		# Execute buffered jump if there's one
 		if jump_buffer_timer > 0.0:
@@ -170,9 +197,103 @@ func _update_physics(delta: float) -> void:
 	# Update was_on_floor for next frame
 	was_on_floor = currently_on_floor
 	
-	# Apply gravity (unless dashing)
+	# Check for wall sliding if not on floor and not dashing
 	if not currently_on_floor and not is_dashing:
-		velocity.y += gravity * delta
+		_update_wall_sliding()
+	
+	# Apply gravity (unless dashing or wall sliding)
+	if not currently_on_floor and not is_dashing:
+		if is_wall_sliding:
+			# Slow fall when wall sliding
+			velocity.y += wall_slide_speed * delta
+		else:
+			velocity.y += gravity * delta
+
+func _update_wall_sliding() -> void:
+	var tier_skills = skills.get(tier, [Skill.MOVE, Skill.JUMP])
+	if Skill.WALL_CLIMB not in tier_skills:
+		is_wall_sliding = false
+		return
+	
+	# Wall climbing is only available when controlled by player
+	if current_state != State.CONTROLLED:
+		is_wall_sliding = false
+		return
+	
+	# Check if we're touching a wall and falling
+	var wall_data = _get_wall_collision()
+	if wall_data.is_touching and velocity.y > 0:
+		# Check if we changed wall direction (left to right or right to left)
+		var has_changed_direction = _has_wall_direction_changed(wall_data.normal, last_wall_normal)
+		
+		# Reset cooldown if we changed wall direction
+		if has_changed_direction:
+			wall_jump_cooldown_timer = 0.0
+		
+		# Check if we're in wall jump cooldown for this specific wall
+		var is_same_wall = _is_same_wall(wall_data.normal, last_wall_normal)
+		if is_same_wall and wall_jump_cooldown_timer > 0.0:
+			is_wall_sliding = false
+			return
+		
+		# Only wall slide if actively moving towards the wall
+		var direction = InputManager.get_movement_input()
+		var moving_towards_wall = (wall_data.normal.x > 0 and direction.x < 0) or (wall_data.normal.x < 0 and direction.x > 0)
+		
+		if moving_towards_wall:
+			# Check if we're transitioning from not wall sliding to wall sliding
+			var was_wall_sliding = is_wall_sliding
+			is_wall_sliding = true
+			wall_normal = wall_data.normal
+			
+			# Execute buffered jump if there's one and we just started wall sliding
+			if not was_wall_sliding and jump_buffer_timer > 0.0 and Skill.WALL_CLIMB in tier_skills:
+				_execute_wall_jump()
+				jump_buffer_timer = 0.0
+				return
+			
+			# Reset air jump when wall sliding starts
+			if jumps_remaining == 0:
+				jumps_remaining = 1
+		else:
+			is_wall_sliding = false
+	else:
+		is_wall_sliding = false
+
+func _is_same_wall(current_normal: Vector2, previous_normal: Vector2) -> bool:
+	# Consider it the same wall if the normals are pointing in the same direction
+	# with a small tolerance for floating point precision
+	var dot_product = current_normal.dot(previous_normal)
+	return dot_product > 0.8  # Threshold for considering it the same wall
+
+func _has_wall_direction_changed(current_normal: Vector2, previous_normal: Vector2) -> bool:
+	# Check if we changed from left wall to right wall or vice versa
+	if previous_normal == Vector2.ZERO:
+		return false  # No previous wall to compare
+	
+	# Left wall has positive x normal, right wall has negative x normal
+	var current_is_left_wall = current_normal.x > 0
+	var previous_is_left_wall = previous_normal.x > 0
+	
+	return current_is_left_wall != previous_is_left_wall
+
+func _get_wall_collision() -> Dictionary:
+	var result = {"is_touching": false, "normal": Vector2.ZERO}
+	
+	if not wall_left_raycast or not wall_right_raycast:
+		return result
+	
+	wall_left_raycast.force_raycast_update()
+	wall_right_raycast.force_raycast_update()
+	
+	if wall_left_raycast.is_colliding():
+		result.is_touching = true
+		result.normal = wall_left_raycast.get_collision_normal()
+	elif wall_right_raycast.is_colliding():
+		result.is_touching = true
+		result.normal = wall_right_raycast.get_collision_normal()
+	
+	return result
 
 func _handle_state_logic() -> void:
 	match current_state:
@@ -247,6 +368,11 @@ func _apply_jump(jump_input: bool) -> void:
 		return
 	
 	if jump_input:
+		# Check for wall jump first
+		if is_wall_sliding and Skill.WALL_CLIMB in tier_skills:
+			_execute_wall_jump()
+			return
+		
 		# Check if we can use coyote time (recently left ground)
 		var can_coyote_jump = coyote_timer > 0.0 and not is_on_floor()
 		# Check if we're on floor and have jumps
@@ -259,9 +385,8 @@ func _apply_jump(jump_input: bool) -> void:
 			if can_coyote_jump:
 				coyote_timer = 0.0  # Used coyote time
 		else:
-			# Buffer the jump for when we land
+			# Buffer the jump for when we land OR when we start wall sliding
 			jump_buffer_timer = jump_buffer_time
-			print("Jump buffered! Will execute on landing.")
 
 func _execute_jump() -> void:
 	velocity.y = jump_velocity
@@ -274,6 +399,25 @@ func _execute_jump() -> void:
 		print("Buffered jump executed!")
 	else:
 		print("Normal jump executed!")
+
+func _execute_wall_jump() -> void:
+	# Wall jump pushes away from the wall
+	velocity.x = wall_normal.x * wall_jump_velocity.x
+	velocity.y = wall_jump_velocity.y
+	
+	# Store the wall we're jumping from and start cooldown
+	last_wall_normal = wall_normal
+	wall_jump_cooldown_timer = wall_jump_cooldown_time
+	
+	# Stop wall sliding
+	is_wall_sliding = false
+	wall_normal = Vector2.ZERO
+	
+	# Consume a jump
+	jumps_remaining -= 1
+	
+	# Flip sprite to face away from wall
+	_flip_to_direction(last_wall_normal.x)
 
 func _perform_dash(direction: float) -> void:
 	is_dashing = true
@@ -292,6 +436,10 @@ func _flip_to_direction(dir: float) -> void:
 func _release_control() -> void:
 	# Store current velocity to preserve momentum
 	var current_velocity := velocity
+	
+	# Stop wall sliding when releasing control
+	is_wall_sliding = false
+	wall_normal = Vector2.ZERO
 	
 	# Reset state based on chip status
 	if chip_destroyed:
@@ -325,6 +473,11 @@ func _preserve_momentum_after_release(previous_velocity: Vector2) -> void:
 
 func _handle_ai_patrol() -> void:
 	var current_direction := get_facing_direction()
+	
+	# Wall climbing is only available when controlled, so AI never wall slides
+	# If somehow wall sliding is active, stop it
+	if is_wall_sliding:
+		is_wall_sliding = false
 	
 	if _should_turn_around(current_direction):
 		_turn_around()
@@ -451,10 +604,13 @@ func _update_animation() -> void:
 	call_deferred("_update_sprite_flip")
 
 func _get_target_animation() -> String:
-	# Priority order: Dash > Jump/Fall > Movement > State-based > Idle
+	# Priority order: Dash > Wall Slide > Jump/Fall > Movement > State-based > Idle
 	
 	if is_dashing:
 		return "Dash"
+	
+	if is_wall_sliding:
+		return "WallSlide"
 	
 	if not is_on_floor():
 		if velocity.y < -50:  # Going up with significant speed
