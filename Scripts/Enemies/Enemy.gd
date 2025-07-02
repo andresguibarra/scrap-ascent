@@ -18,6 +18,16 @@ var skills = {
 @export var jump_buffer_time: float = 0.01
 @export var flip_cooldown_time: float = 0.5  # Time to wait before allowing another flip
 
+# Tier colors for AI state
+@export var tier_1_color: Color = Color(0.8, 0.4, 0.4, 1.0)  # Red
+@export var tier_2_color: Color = Color(0.4, 0.6, 0.9, 1.0)  # Blue
+@export var tier_3_color: Color = Color(0.9, 0.6, 0.2, 1.0)  # Orange
+@export var tier_4_color: Color = Color(0.7, 0.3, 0.8, 1.0)  # Purple
+
+# State colors
+@export var inert_color: Color = Color(0.3, 0.3, 0.3, 1.0)      # Gray
+@export var controlled_color: Color = Color(0.4, 0.8, 0.4, 1.0)  # Green
+
 var gravity: float = ProjectSettings.get_setting("physics/2d/default_gravity")
 var current_state: State = State.AI
 var chip_destroyed: bool = false
@@ -392,17 +402,17 @@ func _update_visual_state() -> void:
 			# Different colors for each tier
 			match tier:
 				1:
-					animated_sprite.modulate = Color(0.8, 0.4, 0.4, 1.0)  # Red for tier 1
+					animated_sprite.modulate = tier_1_color
 				2:
-					animated_sprite.modulate = Color(0.4, 0.6, 0.9, 1.0)  # Blue for tier 2
+					animated_sprite.modulate = tier_2_color
 				3:
-					animated_sprite.modulate = Color(0.9, 0.6, 0.2, 1.0)  # Orange for tier 3
+					animated_sprite.modulate = tier_3_color
 				_:
-					animated_sprite.modulate = Color(0.7, 0.3, 0.8, 1.0)  # Purple for tier 4+
+					animated_sprite.modulate = tier_4_color
 		State.INERT:
-			animated_sprite.modulate = Color(0.3, 0.3, 0.3, 1.0)  # Gray when inert
+			animated_sprite.modulate = inert_color
 		State.CONTROLLED:
-			animated_sprite.modulate = Color(0.4, 0.8, 0.4, 1.0)  # Green when controlled
+			animated_sprite.modulate = controlled_color
 	
 	# Force animation update when state changes
 	_update_animation()
