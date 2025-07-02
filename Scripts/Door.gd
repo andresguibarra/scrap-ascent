@@ -5,6 +5,8 @@ enum DoorState { OPEN, CLOSED, OPENING, CLOSING }
 @export var animation_duration: float = 1.0
 @export var start_open: bool = false
 @export var trigger_node: Node2D
+@export var crush_push_speed: float = 300.0
+@export var crush_upward_velocity: float = -200.0
 
 @onready var path_follow: PathFollow2D = $MovementPath/PathFollow2D
 @onready var crush_detector: Area2D = $MovementPath/PathFollow2D/DoorBody/CrushDetector
@@ -111,15 +113,11 @@ func _crush_enemy(enemy: CharacterBody2D) -> void:
 	if not door_body:
 		return
 	
-	# Calculate direction to move enemy
+	# Calculate direction to push enemy
 	var dir = sign(enemy.global_position.x - door_body.global_position.x)
 	if dir == 0:
 		dir = 1  # Default to right if centered
 	
-	# Move enemy completely out of door area (2 tiles = 32 pixels to ensure clearance)
-	var displacement = dir * 32
-	enemy.global_position.x += displacement
-	
-	# Ensure enemy is aligned to tile grid (16px tiles)
-	enemy.global_position.x = round(enemy.global_position.x / 16.0) * 16.0
-	enemy.global_position.y = round(enemy.global_position.y / 16.0) * 16.0
+	# Apply push velocity instead of teleporting
+	enemy.velocity.x = dir * crush_push_speed
+	enemy.velocity.y = crush_upward_velocity
