@@ -2,27 +2,34 @@ extends Node2D
 
 enum DoorState { OPEN, CLOSED, OPENING, CLOSING }
 
-@export var movement_distance: float = 16.0
 @export var animation_duration: float = 1.0
-@export var start_open: bool = true
+@export var start_open: bool = false
 @export var trigger_node: Node2D
 
 @onready var path_follow: PathFollow2D = $MovementPath/PathFollow2D
+@onready var crush_detector: Area2D = $MovementPath/PathFollow2D/DoorBody/CrushDetector
 
-var current_state: DoorState = DoorState.OPEN
+var current_state: DoorState = DoorState.CLOSED
 var tween: Tween
+var crushed_enemies: Array[CharacterBody2D] = []
 
 func _ready() -> void:
 	_set_initial_state()
 	_connect_to_trigger()
 
+func _physics_process(_delta: float) -> void:
+	if current_state == DoorState.CLOSING and path_follow:
+		# Only crush when door is almost fully closed (10% progress, since 0.0 = closed)
+		if path_follow.progress_ratio <= 0.1:
+			_check_for_crushing()
+
 func _set_initial_state() -> void:
 	if start_open:
 		current_state = DoorState.OPEN
-		_set_path_position(0.0)
+		_set_path_position(1.0)  # 1.0 = open
 	else:
 		current_state = DoorState.CLOSED
-		_set_path_position(1.0)
+		_set_path_position(0.0)  # 0.0 = closed
 
 func _connect_to_trigger() -> void:
 	if trigger_node and trigger_node.has_signal("activated"):
@@ -34,19 +41,10 @@ func _connect_to_trigger() -> void:
 			trigger_node.deactivated.connect(_on_trigger_deactivated)
 
 func _on_trigger_activated() -> void:
-	activate()
+	open_door()
 
 func _on_trigger_deactivated() -> void:
-	deactivate()
-
-# Interface methods - these can be called by any trigger system
-func activate() -> void:
 	close_door()
-	print("Door activated (closing)!")
-
-func deactivate() -> void:
-	open_door()
-	print("Door deactivated (opening)!")
 
 func _set_path_position(progress: float) -> void:
 	if path_follow:
@@ -57,16 +55,16 @@ func open_door() -> void:
 		return
 	
 	current_state = DoorState.OPENING
-	_animate_door(0.0, DoorState.OPEN)
-	print("Door opening...")
+	_animate_door(1.0, DoorState.OPEN)  # 1.0 = open
 
 func close_door() -> void:
 	if current_state == DoorState.CLOSED or current_state == DoorState.CLOSING:
 		return
 	
+	# Clear the crushed enemies list when starting to close
+	crushed_enemies.clear()
 	current_state = DoorState.CLOSING
-	_animate_door(1.0, DoorState.CLOSED)
-	print("Door closing...")
+	_animate_door(0.0, DoorState.CLOSED)  # 0.0 = closed
 
 func toggle_door() -> void:
 	match current_state:
@@ -74,8 +72,6 @@ func toggle_door() -> void:
 			close_door()
 		DoorState.CLOSED:
 			open_door()
-		_:
-			pass  # Don't toggle while animating
 
 func _animate_door(target_progress: float, final_state: DoorState) -> void:
 	if tween:
@@ -88,11 +84,6 @@ func _animate_door(target_progress: float, final_state: DoorState) -> void:
 
 func _on_animation_complete(final_state: DoorState) -> void:
 	current_state = final_state
-	match final_state:
-		DoorState.OPEN:
-			print("Door opened!")
-		DoorState.CLOSED:
-			print("Door closed!")
 
 func is_open() -> bool:
 	return current_state == DoorState.OPEN
@@ -102,3 +93,33 @@ func is_closed() -> bool:
 
 func is_moving() -> bool:
 	return current_state == DoorState.OPENING or current_state == DoorState.CLOSING
+
+func _check_for_crushing() -> void:
+	if not crush_detector:
+		return
+	
+	var overlapping_bodies = crush_detector.get_overlapping_bodies()
+	for body in overlapping_bodies:
+		if body.is_in_group("enemies") and not body.chip_destroyed and body not in crushed_enemies:
+			_crush_enemy(body)
+			crushed_enemies.append(body)
+
+func _crush_enemy(enemy: CharacterBody2D) -> void:
+	enemy.destroy_chip()
+	
+	var door_body = path_follow.get_child(0) as AnimatableBody2D
+	if not door_body:
+		return
+	
+	# Calculate direction to move enemy
+	var dir = sign(enemy.global_position.x - door_body.global_position.x)
+	if dir == 0:
+		dir = 1  # Default to right if centered
+	
+	# Move enemy completely out of door area (2 tiles = 32 pixels to ensure clearance)
+	var displacement = dir * 32
+	enemy.global_position.x += displacement
+	
+	# Ensure enemy is aligned to tile grid (16px tiles)
+	enemy.global_position.x = round(enemy.global_position.x / 16.0) * 16.0
+	enemy.global_position.y = round(enemy.global_position.y / 16.0) * 16.0

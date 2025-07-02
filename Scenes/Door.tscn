@@ -1,4 +1,4 @@
-[gd_scene load_steps=5 format=3 uid="uid://b6q3wfgv2mrcw"]
+[gd_scene load_steps=6 format=3 uid="uid://b6q3wfgv2mrcw"]
 
 [ext_resource type="Script" uid="uid://b6tq7aatr8uc3" path="res://Scripts/Door.gd" id="1_38ogf"]
 [ext_resource type="Texture2D" uid="uid://cf7x7i3r8nwi6" path="res://Assets/MetallicDoor.png" id="2_mw28t"]
@@ -11,6 +11,9 @@ point_count = 2
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_27480"]
 size = Vector2(16, 16)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_crush_detect"]
+size = Vector2(14, 18)
 
 [node name="Door" type="Node2D"]
 script = ExtResource("1_38ogf")
@@ -35,3 +38,12 @@ texture = ExtResource("2_mw28t")
 [node name="CollisionShape2D" type="CollisionShape2D" parent="MovementPath/PathFollow2D/DoorBody"]
 shape = SubResource("RectangleShape2D_27480")
 debug_color = Color(0.936352, 0.00581525, 0.630113, 0.42)
+
+[node name="CrushDetector" type="Area2D" parent="MovementPath/PathFollow2D/DoorBody"]
+collision_layer = 0
+collision_mask = 4
+
+[node name="CrushCollision" type="CollisionShape2D" parent="MovementPath/PathFollow2D/DoorBody/CrushDetector"]
+position = Vector2(1.39554e-05, 0)
+shape = SubResource("RectangleShape2D_crush_detect")
+debug_color = Color(0.429359, 0.485619, 0.920063, 0.42)

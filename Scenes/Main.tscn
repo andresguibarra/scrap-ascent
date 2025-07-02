@@ -193,7 +193,6 @@ tier = 2
 position = Vector2(520, 32)
 rotation = 3.14159
 scale = Vector2(1, 4)
-movement_distance = 32.0
 animation_duration = 0.3
 trigger_node = NodePath("../Button")
 
