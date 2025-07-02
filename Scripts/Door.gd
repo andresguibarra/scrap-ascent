@@ -7,29 +7,14 @@ enum DoorState { OPEN, CLOSED, OPENING, CLOSING }
 @export var start_open: bool = true
 @export var trigger_node: Node2D
 
-#@onready var movement_path: Path2D = $MovementPath
 @onready var path_follow: PathFollow2D = $MovementPath/PathFollow2D
-#@onready var collision_shape: CollisionShape2D = $MovementPath/PathFollow2D/DoorBody/CollisionShape2D
 
 var current_state: DoorState = DoorState.OPEN
 var tween: Tween
 
-#func _process(delta: float) -> void:
-	#collision_shape.global_position = collision_shape.global_position
-
 func _ready() -> void:
-	#_setup_movement_path()
 	_set_initial_state()
 	_connect_to_trigger()
-
-#func _setup_movement_path() -> void:
-	#if not movement_path or not path_follow:
-		#return
-	
-	#var curve = Curve2D.new()
-	#curve.add_point(Vector2.ZERO)
-	#curve.add_point(Vector2(0, movement_distance))
-	#movement_path.curve = curve
 
 func _set_initial_state() -> void:
 	if start_open:

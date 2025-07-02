@@ -99,7 +99,7 @@ func _handle_possession_movement(_delta: float) -> void:
 	_set_particle_parameters("possession")
 	
 	# Check if we're close enough to complete possession
-	if distance_to_enemy < 20.0:  # Close enough to possess
+	if distance_to_enemy < 10.0:  # Close enough to possess
 		_complete_possession()
 		return
 	
