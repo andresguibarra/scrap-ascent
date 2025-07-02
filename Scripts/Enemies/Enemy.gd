@@ -61,6 +61,10 @@ var weapon_instance: Weapon = null
 var flip_cooldown_timer: float = 0.0
 var last_flip_direction: float = 0.0
 
+# Weapon detection optimization
+var weapon_scan_timer: float = 0.0
+var weapon_scan_interval: float = 0.5  # Scan for weapons every 0.5 seconds
+
 @onready var edge_raycast: RayCast2D = $EdgeRayCast2D
 @onready var wall_raycast: RayCast2D = $WallRayCast2D
 @onready var wall_left_raycast: RayCast2D = $WallLeftRayCast2D
@@ -170,6 +174,10 @@ func _update_timers(delta: float) -> void:
 	# Update wall jump cooldown timer
 	if wall_jump_cooldown_timer > 0.0:
 		wall_jump_cooldown_timer -= delta
+	
+	# Update weapon scan timer
+	if weapon_scan_timer > 0.0:
+		weapon_scan_timer -= delta
 
 func _update_physics(delta: float) -> void:
 	var currently_on_floor = is_on_floor()
@@ -481,8 +489,9 @@ func _handle_ai_patrol() -> void:
 		is_wall_sliding = false
 	
 	# Check for nearby weapons to pick up (only if we don't already have one)
-	if not weapon_instance:
+	if not weapon_instance and weapon_scan_timer <= 0.0:
 		_check_for_nearby_weapons()
+		weapon_scan_timer = weapon_scan_interval
 	
 	if _should_turn_around(current_direction):
 		_turn_around()
