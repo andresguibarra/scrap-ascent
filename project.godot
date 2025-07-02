@@ -13,7 +13,7 @@ config_version=5
 config/name="Scrap Ascent"
 run/main_scene="res://Scenes/TestingMechanics.tscn"
 config/features=PackedStringArray("4.4", "GL Compatibility")
-config/icon="res://icon.svg"
+config/icon="uid://vj86ups5wxa1"
 
 [autoload]
 
@@ -25,7 +25,12 @@ window/size/viewport_width=1280
 window/size/viewport_height=720
 window/size/mode=3
 window/stretch/mode="viewport"
+window/stretch/aspect="expand"
 window/stretch/scale=3.0
+
+[gui]
+
+theme/default_font_multichannel_signed_distance_field=true
 
 [input]
 

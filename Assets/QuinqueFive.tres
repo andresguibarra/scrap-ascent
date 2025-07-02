@@ -1,0 +1,16 @@
+[gd_resource type="FontFile" format=3]
+
+[resource]
+cache/0/16/0/ascent = 0.0
+cache/0/16/0/descent = 0.0
+cache/0/16/0/underline_position = 0.0
+cache/0/16/0/underline_thickness = 0.0
+cache/0/16/0/scale = 1.0
+data = ExtResource("res://Assets/QuinqueFive.ttf")
+force_autohinter = false
+hinting = 1
+subpixel_positioning = 1
+oversampling = 4.0
+msdf_pixel_range = 16
+msdf_size = 48
+allow_system_fallback = true
