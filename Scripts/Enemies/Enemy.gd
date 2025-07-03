@@ -5,8 +5,9 @@ enum State { AI, INERT, CONTROLLED }
 enum Skill { MOVE, JUMP, DOUBLE_JUMP, DASH, WALL_CLIMB }
 var skills = {
 	1: [Skill.MOVE, Skill.JUMP],
-	2: [Skill.MOVE, Skill.JUMP, Skill.DASH, Skill.WALL_CLIMB],
-	3: [Skill.MOVE, Skill.JUMP, Skill.DOUBLE_JUMP, Skill.DASH, Skill.WALL_CLIMB],
+	2: [Skill.MOVE, Skill.JUMP, Skill.DASH],
+	3: [Skill.MOVE, Skill.JUMP, Skill.DASH, Skill.WALL_CLIMB],
+	4: [Skill.MOVE, Skill.JUMP, Skill.DOUBLE_JUMP, Skill.DASH, Skill.WALL_CLIMB],
 }
 @export var tier = 1
 @export var has_weapon = false
@@ -29,7 +30,6 @@ var skills = {
 
 # State colors
 @export var inert_color: Color = Color(0.3, 0.3, 0.3, 1.0)      # Gray
-@export var controlled_color: Color = Color(0.4, 0.8, 0.4, 1.0)  # Green
 
 var gravity: float = ProjectSettings.get_setting("physics/2d/default_gravity")
 var current_state: State = State.AI
@@ -521,21 +521,10 @@ func _drop_weapon_on_destroy() -> void:
 
 func _update_visual_state() -> void:
 	match current_state:
-		State.AI:
-			# Different colors for each tier
-			match tier:
-				1:
-					animated_sprite.modulate = tier_1_color
-				2:
-					animated_sprite.modulate = tier_2_color
-				3:
-					animated_sprite.modulate = tier_3_color
-				_:
-					animated_sprite.modulate = tier_4_color
+		State.AI, State.CONTROLLED:
+			animated_sprite.modulate = get_tier_color()
 		State.INERT:
 			animated_sprite.modulate = inert_color
-		State.CONTROLLED:
-			animated_sprite.modulate = controlled_color
 	
 	# Force animation update when state changes
 	_update_animation()
@@ -543,6 +532,18 @@ func _update_visual_state() -> void:
 func get_facing_direction() -> float:
 	# Sprites face left by default, so flip_h = false means facing left (-1), flip_h = true means facing right (1)
 	return 1.0 if animated_sprite.flip_h else -1.0
+
+func get_tier_color() -> Color:
+	# Returns the color corresponding to the current tier
+	match tier:
+		1:
+			return tier_1_color
+		2:
+			return tier_2_color
+		3:
+			return tier_3_color
+		_:
+			return tier_4_color
 
 func take_damage(_damage_amount: float) -> void:
 	match current_state:
@@ -679,7 +680,8 @@ func _sync_eyes_flip() -> void:
 func _activate_possession_light() -> void:
 	if light:
 		light.enabled = true
-		light.energy = 1.5  # Less intense than Orb (which uses 2.0+)
+		light.energy = 1.7  # Less intense than Orb (which uses 2.0+)
+		light.color = get_tier_color()
 		print("Enemy: Possession light activated")
 	else:
 		print("Enemy: Warning - PointLight2D not found!")
