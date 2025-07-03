@@ -1,3 +1,4 @@
+@tool
 extends Node2D
 
 enum DoorState { OPEN, CLOSED, OPENING, CLOSING }
@@ -5,17 +6,48 @@ enum DoorState { OPEN, CLOSED, OPENING, CLOSING }
 @export var animation_duration: float = 1.0
 @export var start_open: bool = false
 @export var trigger_node: Node2D
+@export var path_size_tiles: int = 1:
+	set(value):
+		path_size_tiles = max(1, value)
+		_update_path_size()
 
 @onready var path_follow: PathFollow2D = $MovementPath/PathFollow2D
 @onready var crush_detector: Area2D = $MovementPath/PathFollow2D/DoorBody/CrushDetector
+@onready var movement_path: Path2D = $MovementPath
 
 var current_state: DoorState = DoorState.CLOSED
 var tween: Tween
 var crushed_enemies: Array[CharacterBody2D] = []
 
 func _ready() -> void:
-	_set_initial_state()
-	_connect_to_trigger()
+	# Ensure each instance has its own unique curve
+	if movement_path and movement_path.curve:
+		movement_path.curve = movement_path.curve.duplicate()
+	
+	if not Engine.is_editor_hint():
+		_set_initial_state()
+		_connect_to_trigger()
+		_update_path_size()
+	else:
+		call_deferred("_update_path_size")
+
+func _update_path_size():
+	if not movement_path:
+		return
+	
+	var curve = movement_path.curve
+	if not curve:
+		curve = Curve2D.new()
+		movement_path.curve = curve
+	
+	# Clear existing points
+	curve.clear_points()
+	
+	# Add start point (position out: y -path_size_tiles * 8)
+	curve.add_point(Vector2(0, -path_size_tiles * 8))
+	
+	# Add end point (position in: y path_size_tiles * 8)
+	curve.add_point(Vector2(0, path_size_tiles * 8))
 
 func _physics_process(_delta: float) -> void:
 	if current_state == DoorState.CLOSING and path_follow:
@@ -51,6 +83,9 @@ func _set_path_position(progress: float) -> void:
 		path_follow.progress_ratio = progress
 
 func open_door() -> void:
+	if Engine.is_editor_hint():
+		return
+		
 	if current_state == DoorState.OPEN or current_state == DoorState.OPENING:
 		return
 	
@@ -58,6 +93,9 @@ func open_door() -> void:
 	_animate_door(1.0, DoorState.OPEN)  # 1.0 = open
 
 func close_door() -> void:
+	if Engine.is_editor_hint():
+		return
+		
 	if current_state == DoorState.CLOSED or current_state == DoorState.CLOSING:
 		return
 	

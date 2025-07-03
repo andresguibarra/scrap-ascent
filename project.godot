@@ -83,7 +83,9 @@ drop_weapon={
 2d_physics/layer_4="Orb"
 2d_physics/layer_5="Projectiles"
 2d_physics/layer_6="Weapons"
+2d_physics/layer_7="PassBoxes"
 
 [rendering]
 
 textures/canvas_textures/default_texture_filter=0
+2d/snap/snap_2d_transforms_to_pixel=true
