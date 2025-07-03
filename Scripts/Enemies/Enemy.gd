@@ -53,6 +53,11 @@ var coyote_timer: float = 0.0
 var was_on_floor: bool = false
 var jump_buffer_timer: float = 0.0
 
+# Wall slide coyote time
+var wall_slide_coyote_timer: float = 0.0
+var was_wall_sliding: bool = false
+var wall_slide_coyote_normal: Vector2 = Vector2.ZERO
+
 # Weapon reference (instantiated if has_weapon = true)
 var weapon_instance: Weapon = null
 
@@ -169,6 +174,10 @@ func _update_timers(delta: float) -> void:
 	# Update wall jump cooldown timer
 	if wall_jump_cooldown_timer > 0.0:
 		wall_jump_cooldown_timer -= delta
+	
+	# Update wall slide coyote timer
+	if wall_slide_coyote_timer > 0.0:
+		wall_slide_coyote_timer -= delta
 
 func _update_physics(delta: float) -> void:
 	var currently_on_floor = is_on_floor()
@@ -186,6 +195,8 @@ func _update_physics(delta: float) -> void:
 		can_dash_in_air = true
 		coyote_timer = 0.0
 		is_wall_sliding = false  # Stop wall sliding when on floor
+		wall_slide_coyote_timer = 0.0  # Reset wall slide coyote time on ground
+		wall_slide_coyote_normal = Vector2.ZERO  # Clear stored wall normal
 		wall_jump_cooldown_timer = 0.0  # Reset wall jump cooldown when on ground
 		last_wall_normal = Vector2.ZERO  # Clear wall memory when on ground
 		
@@ -196,6 +207,14 @@ func _update_physics(delta: float) -> void:
 	
 	# Update was_on_floor for next frame
 	was_on_floor = currently_on_floor
+	
+	# Handle wall slide coyote time - start timer when leaving wall
+	if was_wall_sliding and not is_wall_sliding:
+		wall_slide_coyote_timer = coyote_time
+		wall_slide_coyote_normal = wall_normal  # Store the wall normal for coyote jump
+	
+	# Update was_wall_sliding for next frame
+	was_wall_sliding = is_wall_sliding
 	
 	# Check for wall sliding if not on floor and not dashing
 	if not currently_on_floor and not is_dashing:
@@ -368,9 +387,20 @@ func _apply_jump(jump_input: bool) -> void:
 		return
 	
 	if jump_input:
-		# Check for wall jump first
+		# Check for wall jump first (current wall sliding)
 		if is_wall_sliding and Skill.WALL_CLIMB in tier_skills:
 			_execute_wall_jump()
+			return
+		
+		# Check for wall slide coyote jump (recently left wall)
+		if wall_slide_coyote_timer > 0.0 and Skill.WALL_CLIMB in tier_skills:
+			# Temporarily restore wall normal for the jump
+			var saved_wall_normal = wall_normal
+			wall_normal = wall_slide_coyote_normal
+			_execute_wall_jump()
+			wall_slide_coyote_timer = 0.0  # Used wall slide coyote time
+			wall_normal = saved_wall_normal  # Restore original state
+			print("Wall slide coyote jump executed!")
 			return
 		
 		# Check if we can use coyote time (recently left ground)
