@@ -18,13 +18,16 @@ texture = ExtResource("1_p3102")
 hframes = 5
 region_rect = Rect2(0, 0, 16, 16)
 
-[node name="Area2D" type="Area2D" parent="."]
+[node name="Node2D" type="Node2D" parent="."]
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Area2D"]
+[node name="Area2D" type="Area2D" parent="Node2D"]
+collision_mask = 4
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Node2D/Area2D"]
 position = Vector2(0, 6)
 shape = SubResource("RectangleShape2D_a506e")
 
-[node name="PointLight2D" type="PointLight2D" parent="."]
+[node name="PointLight2D" type="PointLight2D" parent="Node2D"]
 position = Vector2(0, 6)
 scale = Vector2(0.02, 0.008)
 enabled = false
