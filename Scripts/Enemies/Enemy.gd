@@ -55,7 +55,7 @@ var jump_buffer_timer: float = 0.0
 
 # Wall slide coyote time
 var wall_slide_coyote_timer: float = 0.0
-var was_wall_sliding: bool = false
+var was_wall_sliding_prev_frame: bool = false
 var wall_slide_coyote_normal: Vector2 = Vector2.ZERO
 
 # Weapon reference (instantiated if has_weapon = true)
@@ -209,12 +209,12 @@ func _update_physics(delta: float) -> void:
 	was_on_floor = currently_on_floor
 	
 	# Handle wall slide coyote time - start timer when leaving wall
-	if was_wall_sliding and not is_wall_sliding:
+	if was_wall_sliding_prev_frame and not is_wall_sliding:
 		wall_slide_coyote_timer = coyote_time
 		wall_slide_coyote_normal = wall_normal  # Store the wall normal for coyote jump
 	
-	# Update was_wall_sliding for next frame
-	was_wall_sliding = is_wall_sliding
+	# Update was_wall_sliding_prev_frame for next frame
+	was_wall_sliding_prev_frame = is_wall_sliding
 	
 	# Check for wall sliding if not on floor and not dashing
 	if not currently_on_floor and not is_dashing:
