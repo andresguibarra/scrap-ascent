@@ -52,7 +52,8 @@ The heart of Scrap Ascent's gameplay:
   - Movement
   - Jump
   - Dash (quick burst of speed)
-- **Best for**: Crossing gaps, quick traversal
+  - Wall Climbing (slide down walls, wall jump)
+- **Best for**: Crossing gaps, quick traversal, vertical navigation
 
 ### Tier 3 Enemy (Advanced)
 - **Color**: Purple tint  
@@ -62,7 +63,8 @@ The heart of Scrap Ascent's gameplay:
   - Jump
   - Double Jump (can jump twice in air)
   - Dash
-- **Best for**: Complex platforming, reaching high areas
+  - Wall Climbing (slide down walls, wall jump)
+- **Best for**: Complex platforming, reaching high areas, advanced vertical movement
 
 ### Armed Enemy (Combat)
 - **Color**: Orange tint
@@ -106,6 +108,23 @@ When controlling Armed Enemies, you gain access to a sophisticated weapon system
 - **Toggle**: Switch weapon on/off for different situations (C key handles both pickup and drop)
 - **Pickup**: Weapons can be retrieved by pressing C when close to them
 
+## 🏗️ Interactive Environment
+
+The world of Scrap Ascent features interactive elements that create dynamic puzzles and challenges:
+
+### Doors
+- **Animated Movement**: Doors open and close along predetermined paths
+- **Trigger System**: Can be activated by buttons, switches, or other mechanisms
+- **Crushing Mechanic**: Doors can destroy enemy control chips if they get caught while closing
+- **Strategic Elements**: Use doors to block paths, access new areas, or disable enemies
+
+### Pressure Buttons
+- **Activation**: Step on buttons with any possessed enemy to activate them
+- **Visual Feedback**: Buttons light up and change color when activated
+- **Persistent Activation**: Buttons stay active as long as an enemy remains on them
+- **Door Control**: Many buttons are connected to doors for puzzle-solving gameplay
+- **Strategic Use**: Use different enemy types to keep buttons pressed while accessing new areas
+
 ## 🚀 Installation & Setup
 
 ### Requirements
@@ -138,9 +157,10 @@ When controlling Armed Enemies, you gain access to a sophisticated weapon system
 
 ### Troubleshooting
 - **Game won't start**: Ensure you're using Godot 4.4 or later
-- **Missing textures**: The game uses simple colored rectangles for sprites
+- **Missing textures**: Check that all asset files (.png, .svg) are properly imported in Godot
 - **Controls not working**: Check that the input map is properly configured in Project Settings
 - **Performance issues**: Try reducing the window size in the project settings
+- **Audio not playing**: Ensure audio drivers are properly configured and volume levels are set
 
 ## 🎯 Gameplay Tips & Strategies
 
@@ -159,14 +179,16 @@ When controlling Armed Enemies, you gain access to a sophisticated weapon system
 
 ### Enemy Selection Strategy
 - **Use Tier 1** for basic movement and when you need slow, precise control
-- **Use Tier 2** for medium-range traversal and dash-based challenges
-- **Use Tier 3** for complex platforming requiring double jumps and agility  
+- **Use Tier 2** for medium-range traversal, dash-based challenges, and wall climbing sections
+- **Use Tier 3** for complex platforming requiring double jumps, agility, and advanced wall climbing
 - **Use Armed Enemies** for combat situations and destroying obstacles
 
 ### Advanced Techniques
 - **Momentum Preservation**: Your velocity carries over when releasing control
 - **Ability Chaining**: Combine different enemy abilities by possessing sequentially
 - **Combat Tactics**: Use armed enemies to clear paths and disable other enemies
+- **Wall Climbing**: Use Tier 2 and 3 enemies to slide down walls and perform wall jumps for vertical navigation
+- **Environmental Puzzles**: Use possessed enemies to activate buttons and manipulate doors for level progression
 
 ## 🔧 Technical Details
 
@@ -177,48 +199,68 @@ When controlling Armed Enemies, you gain access to a sophisticated weapon system
 - **Physics**: Godot's built-in 2D physics system
 
 ### Architecture Highlights
-- **Modular Enemy System**: Skill-based enemy capabilities
+- **Modular Enemy System**: Skill-based enemy capabilities with tier-based progression
 - **Centralized Input Management**: Clean input handling via InputManager singleton
-- **Physics-Based Movement**: Realistic gravity and collision detection
-- **Dynamic Camera System**: Smart camera that follows active character
+- **Physics-Based Movement**: Realistic gravity, collision detection, and wall climbing mechanics
+- **Dynamic Camera System**: Smart camera that follows active character with possession zoom
 - **Visual Effects System**: Dual particle systems and dynamic lighting for enhanced feedback
+- **Interactive Environment System**: Trigger-based doors, pressure buttons, and environmental puzzles
+- **Advanced Collision System**: Multi-layered physics with proper layer management for different entity types
+- **Audio Integration**: Background music and atmospheric sound design
 
 ## 🎨 Visual Style & Feedback
-- **Minimalist geometric art style** with colored rectangles representing characters
+- **Detailed sprite-based art style** with custom-designed characters and environments
+- **Atmospheric backgrounds** that enhance the industrial/sci-fi aesthetic
 - **Color-coded enemy system** for easy identification of states and types
 - **Visual State Indicators**:
   - 🔴 Red robots = AI-controlled (can be possessed)
   - 🟢 Green robots = Currently under your control  
   - ⚫ Gray robots = Destroyed/inert (cannot be possessed)
-  - 🔵 Blue robots = Tier 2 enemies with dash ability
-  - 🟣 Purple robots = Tier 3 enemies with all abilities
+  - 🔵 Blue robots = Tier 2 enemies with dash and wall climbing abilities
+  - 🟣 Purple robots = Tier 3 enemies with all advanced abilities
   - 🟠 Orange robots = Armed enemies with weapons
 - **Dynamic Visual Effects**:
   - Pulsing light effects on the Orb that intensify during movement and possession
   - Particle trails that change intensity based on Orb activity (idle, moving, possessing)
   - Color-matched damage particles when enemies are destroyed
   - Enhanced lighting during possession sequences
+  - Interactive button lighting and door animations
+- **Environmental Details**:
+  - Detailed metallic doors with smooth animation systems
+  - Illuminated pressure buttons with visual activation feedback
+  - Industrial tileset with varied textures and lighting
 - **Smooth physics-based movement** and collision detection
 - **Dynamic camera** that intelligently follows your active character
 
+## 🎵 Audio & Atmosphere
+- **Atmospheric Background Music**: Exploration-themed soundtrack that enhances the sci-fi industrial atmosphere
+- **Dynamic Audio System**: Audio that responds to gameplay actions and environmental interactions
+- **Immersive Soundscape**: Audio design that complements the visual style and enhances player immersion
+
 ## 🚧 Current Status
-This is a demonstration/prototype showcasing the core possession mechanics. The current build includes:
+This is a demonstration/prototype showcasing the core possession mechanics and interactive environments. The current build includes:
 - ✅ Core possession system
-- ✅ Multiple enemy types with unique abilities  
-- ✅ Weapon system for armed enemies
-- ✅ Physics-based platforming
-- ✅ Testing environment with multiple platforms
+- ✅ Multiple enemy types with unique abilities including wall climbing
+- ✅ Weapon system for armed enemies with auto-pickup mechanics
+- ✅ Physics-based platforming with enhanced movement systems
+- ✅ Interactive environment elements (doors, buttons, triggers)
+- ✅ Testing environment with multiple platforms and puzzle elements
 - ✅ Smart camera system that follows active character
 - ✅ Complete input management system
 - ✅ Dynamic visual effects system (particles, lighting, damage effects)
+- ✅ Atmospheric background music and audio integration
+- ✅ Professional sprite-based art style and visual assets
 
 ### Testing the Game
 The game currently runs in a testing environment (`TestingMechanics.tscn`) that includes:
 - Sample platforms for movement testing
 - One of each enemy type to test possession mechanics
 - Weapons for combat testing
+- Interactive doors and buttons for puzzle mechanics
+- Wall climbing sections for advanced movement testing
 - Camera system demonstration
 - Visual effects showcase (particle systems, lighting, damage effects)
+- Audio and atmospheric elements demonstration
 
 ## 🤝 Contributing
 Contributions are welcome! Feel free to:
