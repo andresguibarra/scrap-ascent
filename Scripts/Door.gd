@@ -4,6 +4,13 @@ extends Node2D
 enum DoorState { OPEN, CLOSED, OPENING, CLOSING }
 
 @export var animation_duration: float = 1.0
+@export var progress_curve: Curve = null
+
+static func _create_default_curve() -> Curve:
+	var curve = Curve.new()
+	curve.add_point(Vector2(0.0, 0.0), 0.0, 2.0)
+	curve.add_point(Vector2(1.0, 1.0), 2.0, 0.0)
+	return curve
 @export var start_open: bool = false
 @export var trigger_node: Node2D
 @export var path_size_tiles: int = 1:
@@ -16,13 +23,21 @@ enum DoorState { OPEN, CLOSED, OPENING, CLOSING }
 @onready var movement_path: Path2D = $MovementPath
 
 var current_state: DoorState = DoorState.CLOSED
-var tween: Tween
 var crushed_enemies: Array[CharacterBody2D] = []
+
+var animation_time: float = 0.0
+var is_animating: bool = false
+var target_progress: float = 0.0
+var start_progress: float = 0.0
 
 func _ready() -> void:
 	# Ensure each instance has its own unique curve
 	if movement_path and movement_path.curve:
 		movement_path.curve = movement_path.curve.duplicate()
+	
+	# Default curve if none is assigned
+	if not progress_curve:
+		progress_curve = _create_default_curve()
 	
 	if not Engine.is_editor_hint():
 		_set_initial_state()
@@ -49,11 +64,32 @@ func _update_path_size():
 	# Add end point (position in: y path_size_tiles * 8)
 	curve.add_point(Vector2(0, path_size_tiles * 8))
 
+func _process(delta: float) -> void:
+	if not Engine.is_editor_hint() and is_animating:
+		_update_animation(delta)
+
 func _physics_process(_delta: float) -> void:
 	if current_state == DoorState.CLOSING and path_follow:
 		# Only crush when door is almost fully closed (10% progress, since 0.0 = closed)
 		if path_follow.progress_ratio <= 0.1:
 			_check_for_crushing()
+
+func _update_animation(delta: float) -> void:
+	animation_time += delta
+	var time_ratio = animation_time / animation_duration
+	
+	if time_ratio >= 1.0:
+		# Animation complete
+		time_ratio = 1.0
+		is_animating = false
+		_set_path_position(target_progress)
+		_on_animation_complete()
+	else:
+		# Sample the curve and interpolate position
+		var curve_value = progress_curve.sample(time_ratio)
+		curve_value = clamp(curve_value, 0.0, 1.0)
+		var current_progress = lerp(start_progress, target_progress, curve_value)
+		_set_path_position(current_progress)
 
 func _set_initial_state() -> void:
 	if start_open:
@@ -90,7 +126,7 @@ func open_door() -> void:
 		return
 	
 	current_state = DoorState.OPENING
-	_animate_door(1.0, DoorState.OPEN)  # 1.0 = open
+	_start_animation(1.0)
 
 func close_door() -> void:
 	if Engine.is_editor_hint():
@@ -102,7 +138,7 @@ func close_door() -> void:
 	# Clear the crushed enemies list when starting to close
 	crushed_enemies.clear()
 	current_state = DoorState.CLOSING
-	_animate_door(0.0, DoorState.CLOSED)  # 0.0 = closed
+	_start_animation(0.0)
 
 func toggle_door() -> void:
 	match current_state:
@@ -111,17 +147,28 @@ func toggle_door() -> void:
 		DoorState.CLOSED:
 			open_door()
 
-func _animate_door(target_progress: float, final_state: DoorState) -> void:
-	if tween:
-		tween.kill()
+func _start_animation(target: float) -> void:
+	# Always start from current position and animate to target
+	start_progress = path_follow.progress_ratio if path_follow else 0.0
+	target_progress = target
 	
-	tween = create_tween()
-	var current_progress = path_follow.progress_ratio if path_follow else 0.0
-	tween.tween_method(_set_path_position, current_progress, target_progress, animation_duration)
-	tween.tween_callback(_on_animation_complete.bind(final_state))
+	# Adjust duration based on distance to travel for smoother transitions
+	var distance_to_travel = abs(target_progress - start_progress)
+	if distance_to_travel < 0.01:
+		# Already at target, no need to animate
+		is_animating = false
+		return
+	
+	# Reset animation time to start fresh
+	animation_time = 0.0
+	is_animating = true
 
-func _on_animation_complete(final_state: DoorState) -> void:
-	current_state = final_state
+func _on_animation_complete() -> void:
+	match current_state:
+		DoorState.OPENING:
+			current_state = DoorState.OPEN
+		DoorState.CLOSING:
+			current_state = DoorState.CLOSED
 
 func is_open() -> bool:
 	return current_state == DoorState.OPEN
