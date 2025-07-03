@@ -31,6 +31,7 @@ texture = ExtResource("2_sw2lr")
 position = Vector2(12, -1)
 
 [node name="PickupArea" type="Area2D" parent="."]
+collision_mask = 4
 
 [node name="PickupShape" type="CollisionShape2D" parent="PickupArea"]
 shape = SubResource("CircleShape2D_pickup")
