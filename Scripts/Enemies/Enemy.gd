@@ -20,7 +20,6 @@ var skills = {
 @export var wall_slide_speed: float = 50.0  # Speed when sliding down a wall
 @export var wall_jump_velocity: Vector2 = Vector2(250.0, -300.0)  # Horizontal and vertical push from wall
 @export var wall_jump_cooldown_time: float = 0.6  # Time before can grab same wall again
-@export var weapon_pickup_range: float = 40.0  # Distance at which enemy can detect and pick up weapons
 
 # Tier colors for AI state
 @export var tier_1_color: Color = Color(0.8, 0.4, 0.4, 1.0)  # Red
@@ -60,10 +59,6 @@ var weapon_instance: Weapon = null
 # Flip cooldown tracking
 var flip_cooldown_timer: float = 0.0
 var last_flip_direction: float = 0.0
-
-# Weapon detection optimization
-var weapon_scan_timer: float = 0.0
-var weapon_scan_interval: float = 0.5  # Scan for weapons every 0.5 seconds
 
 @onready var edge_raycast: RayCast2D = $EdgeRayCast2D
 @onready var wall_raycast: RayCast2D = $WallRayCast2D
@@ -174,10 +169,6 @@ func _update_timers(delta: float) -> void:
 	# Update wall jump cooldown timer
 	if wall_jump_cooldown_timer > 0.0:
 		wall_jump_cooldown_timer -= delta
-	
-	# Update weapon scan timer
-	if weapon_scan_timer > 0.0:
-		weapon_scan_timer -= delta
 
 func _update_physics(delta: float) -> void:
 	var currently_on_floor = is_on_floor()
@@ -488,11 +479,6 @@ func _handle_ai_patrol() -> void:
 	if is_wall_sliding:
 		is_wall_sliding = false
 	
-	# Check for nearby weapons to pick up (only if we don't already have one)
-	if not weapon_instance and weapon_scan_timer <= 0.0:
-		_check_for_nearby_weapons()
-		weapon_scan_timer = weapon_scan_interval
-	
 	if _should_turn_around(current_direction):
 		_turn_around()
 		# If we couldn't turn around due to cooldown, stop moving
@@ -509,28 +495,6 @@ func _handle_ai_patrol() -> void:
 
 func _should_turn_around(direction: float) -> bool:
 	return _has_edge_ahead(direction) or _has_wall_ahead(direction)
-
-func _check_for_nearby_weapons() -> void:
-	var weapons := get_tree().get_nodes_in_group("weapons")
-	var nearest_weapon: Weapon = null
-	var shortest_distance := weapon_pickup_range + 1.0
-	
-	for weapon in weapons:
-		if weapon is Weapon and not weapon.is_held:
-			var distance := global_position.distance_to(weapon.global_position)
-			if distance < shortest_distance and distance <= weapon_pickup_range:
-				shortest_distance = distance
-				nearest_weapon = weapon
-	
-	if nearest_weapon:
-		_pick_up_weapon(nearest_weapon)
-
-func _pick_up_weapon(weapon: Weapon) -> void:
-	# Set this enemy as the new holder
-	weapon.set_new_holder(self)
-	weapon_instance = weapon
-	
-	print("Enemy: Picking up weapon at distance: ", global_position.distance_to(weapon.global_position))
 
 func _has_edge_ahead(direction: float) -> bool:
 	if not edge_raycast:
