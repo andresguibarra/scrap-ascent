@@ -11,9 +11,16 @@ var facing_right: bool = true
 var is_being_attracted: bool = false
 var shoot_timer: float = 0.0
 
+# Auto-pickup system
+var holder_in_area: bool = false
+var holder_has_left_area: bool = false
+var pickup_cooldown_timer: float = 0.0
+@export var pickup_cooldown: float = 1.0  # Seconds to wait after dropping before allowing auto-pickup
+
 @onready var holder: Node2D
 @onready var shoot_point: Marker2D = $ShootPoint
 @onready var sprite: Sprite2D = $Sprite2D
+@onready var pickup_area: Area2D = $PickupArea
 
 # =============================================================================
 # LIFECYCLE
@@ -22,9 +29,11 @@ func _ready() -> void:
 	add_to_group("weapons")
 	_update_flip()
 	call_deferred("_auto_setup_holder")
+	call_deferred("_setup_pickup_area")
 
 func _physics_process(delta: float) -> void:
 	_update_shoot_timer(delta)
+	_update_pickup_cooldown(delta)
 	_handle_weapon_state()
 
 # =============================================================================
@@ -33,6 +42,10 @@ func _physics_process(delta: float) -> void:
 func _update_shoot_timer(delta: float) -> void:
 	if shoot_timer > 0.0:
 		shoot_timer -= delta
+
+func _update_pickup_cooldown(delta: float) -> void:
+	if pickup_cooldown_timer > 0.0:
+		pickup_cooldown_timer -= delta
 
 func _handle_weapon_state() -> void:
 	if not is_held:
@@ -47,6 +60,9 @@ func _handle_dropped_state() -> void:
 	
 	if is_being_attracted and holder:
 		_handle_attraction_movement()
+	
+	# Check for automatic pickup when holder re-enters area
+	_check_for_auto_pickup()
 
 func _handle_held_state() -> void:
 	freeze = true
@@ -263,6 +279,10 @@ func _configure_for_dropped_state() -> void:
 	freeze = false
 	collision_layer = 32
 	collision_mask = 1
+	
+	# Start pickup cooldown when dropping
+	pickup_cooldown_timer = pickup_cooldown
+	holder_has_left_area = false  # Reset state when dropping
 
 func _configure_for_attraction() -> void:
 	collision_layer = 0
@@ -282,3 +302,47 @@ func _auto_setup_holder() -> void:
 	
 	_configure_for_held_state()
 	_update_flip()
+
+# =============================================================================
+# AUTO-PICKUP SYSTEM
+# =============================================================================
+func _setup_pickup_area() -> void:
+	if not pickup_area:
+		print("Weapon: Warning - PickupArea not found!")
+		return
+	
+	# Connect signals for area detection
+	if not pickup_area.area_entered.is_connected(_on_pickup_area_entered):
+		pickup_area.area_entered.connect(_on_pickup_area_entered)
+	if not pickup_area.body_entered.is_connected(_on_pickup_body_entered):
+		pickup_area.body_entered.connect(_on_pickup_body_entered)
+	if not pickup_area.body_exited.is_connected(_on_pickup_body_exited):
+		pickup_area.body_exited.connect(_on_pickup_body_exited)
+	
+	print("Weapon: Auto-pickup area setup complete")
+
+func _on_pickup_area_entered(_area: Area2D) -> void:
+	# We're only interested in body detection for this feature
+	pass
+
+func _on_pickup_body_entered(body: Node2D) -> void:
+	if body == holder:
+		holder_in_area = true
+		print("Weapon: Holder entered pickup area")
+
+func _on_pickup_body_exited(body: Node2D) -> void:
+	if body == holder:
+		holder_in_area = false
+		holder_has_left_area = true
+		print("Weapon: Holder left pickup area")
+
+func _check_for_auto_pickup() -> void:
+	# Only auto-pickup if:
+	# 1. Weapon is not held
+	# 2. Holder exists and is in area
+	# 3. Holder has previously left the area (to avoid immediate pickup after drop)
+	# 4. Pickup cooldown has expired
+	# 5. Weapon is not already being attracted
+	if not is_held and holder and holder_in_area and holder_has_left_area and pickup_cooldown_timer <= 0.0 and not is_being_attracted:
+		print("Weapon: Auto-pickup triggered for holder")
+		return_to_holder()
