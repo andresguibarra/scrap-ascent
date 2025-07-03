@@ -1,4 +1,4 @@
-[gd_scene load_steps=5 format=3 uid="uid://blayr5l6n8opq"]
+[gd_scene load_steps=6 format=3 uid="uid://blayr5l6n8opq"]
 
 [ext_resource type="Script" uid="uid://dt82brficleew" path="res://Scripts/Weapon.gd" id="1_weapon"]
 [ext_resource type="Texture2D" uid="uid://cv4ikre6ylup2" path="res://Assets/RobotGunRight.png" id="2_sw2lr"]
@@ -10,7 +10,7 @@ bounce = 0.1
 size = Vector2(14, 10)
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_pickup"]
-radius = 40.0
+radius = 17.0
 
 [node name="Weapon" type="RigidBody2D"]
 collision_layer = 32
