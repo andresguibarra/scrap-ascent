@@ -1,4 +1,4 @@
-[gd_scene load_steps=23 format=3 uid="uid://br3eqxxhw6lmw"]
+[gd_scene load_steps=25 format=3 uid="uid://br3eqxxhw6lmw"]
 
 [ext_resource type="Script" uid="uid://cri6ele7qliv2" path="res://Scripts/Enemies/Enemy.gd" id="1_3h0b7"]
 [ext_resource type="Texture2D" uid="uid://dd64sgkax14bn" path="res://Assets/RobotScrapAscent.png" id="2_s7ep0"]
@@ -46,6 +46,10 @@ region = Rect2(48, 128, 16, 16)
 [sub_resource type="AtlasTexture" id="AtlasTexture_3a2bb"]
 atlas = ExtResource("2_s7ep0")
 region = Rect2(64, 128, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_g2h3t"]
+atlas = ExtResource("2_s7ep0")
+region = Rect2(0, 176, 16, 16)
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_rybfp"]
 animations = [{
@@ -111,7 +115,7 @@ animations = [{
 }, {
 "frames": [{
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_qwcx1")
+"texture": SubResource("AtlasTexture_g2h3t")
 }],
 "loop": true,
 "name": &"WallSlide",
@@ -149,6 +153,10 @@ region = Rect2(0, 112, 16, 16)
 [sub_resource type="AtlasTexture" id="AtlasTexture_c5rnq"]
 atlas = ExtResource("2_s7ep0")
 region = Rect2(0, 144, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_r6blr"]
+atlas = ExtResource("2_s7ep0")
+region = Rect2(0, 192, 16, 16)
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_g2h3t"]
 animations = [{
@@ -194,7 +202,7 @@ animations = [{
 }, {
 "frames": [{
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_i4j8h")
+"texture": SubResource("AtlasTexture_r6blr")
 }],
 "loop": true,
 "name": &"WallSlide",
@@ -224,7 +232,7 @@ target_position = Vector2(10, 0)
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
 sprite_frames = SubResource("SpriteFrames_rybfp")
-animation = &"MoveLeft"
+animation = &"WallSlide"
 
 [node name="PointLight2D" type="PointLight2D" parent="."]
 enabled = false
@@ -247,7 +255,7 @@ process_material = SubResource("ParticleProcessMaterial_damage")
 
 [node name="Eyes" type="AnimatedSprite2D" parent="."]
 sprite_frames = SubResource("SpriteFrames_g2h3t")
-animation = &"MoveLeft"
+animation = &"WallSlide"
 
 [node name="HandMarker" type="Node2D" parent="."]
 position = Vector2(6, 2)
