@@ -23,7 +23,7 @@ func _ready() -> void:
 	if not Engine.is_editor_hint():
 		_connect_signals()
 
-func _process(delta: float) -> void:
+func _process(_delta: float) -> void:
 	if Engine.is_editor_hint():
 		_setup_button()
 
@@ -117,13 +117,19 @@ func _activate_permanent_button() -> void:
 
 func _deactivate_button() -> void:
 	# Only temporary buttons can be deactivated
-	if not _is_temporary_button():
-		return
+	#if not _is_temporary_button():
+		#return
 		
 	is_active = false
 	enemies_on_button = 0  # Reset counter to be safe
 	if sprite:
-		sprite.frame = 0
+		# Set frame based on button type (maintain type when deactivating)
+		if type == Type.BUTTON:
+			sprite.frame = 0  # Button inactive frame
+		elif type == Type.LIGHT_LEFT:
+			sprite.frame = 2  # Light left inactive frame
+		elif type == Type.LIGHT_RIGHT:
+			sprite.frame = 4  # Light right inactive frame
 		sprite.modulate = inactive_color
 	if light:
 		light.enabled = false

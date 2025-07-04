@@ -1,9 +1,11 @@
-[gd_scene load_steps=8 format=4 uid="uid://bm5n8wqxr5kyd"]
+[gd_scene load_steps=10 format=4 uid="uid://bm5n8wqxr5kyd"]
 
 [ext_resource type="PackedScene" uid="uid://c8h3d5k2nap1q" path="res://Scenes/Orb.tscn" id="1_orb"]
 [ext_resource type="PackedScene" uid="uid://br3eqxxhw6lmw" path="res://Scenes/Enemies/Enemy.tscn" id="2_enemy"]
 [ext_resource type="Script" uid="uid://chfcajx0mey86" path="res://Scripts/CameraFollow.gd" id="4_camera"]
 [ext_resource type="Texture2D" uid="uid://b5l6q5k21y4cd" path="res://Assets/Tileset.png" id="4_cteer"]
+[ext_resource type="PackedScene" uid="uid://dofv6q5n6r0lm" path="res://Scenes/Button.tscn" id="4_xmqv1"]
+[ext_resource type="PackedScene" uid="uid://djw6kwtfcfuvk" path="res://Scenes/CountdownBox.tscn" id="5_63b4a"]
 
 [sub_resource type="Environment" id="Environment_1"]
 background_mode = 1
@@ -51,6 +53,14 @@ has_weapon = true
 [node name="Camera2D" type="Camera2D" parent="."]
 position = Vector2(400, 300)
 script = ExtResource("4_camera")
+
+[node name="Button" parent="." instance=ExtResource("4_xmqv1")]
+position = Vector2(616, 312)
+type = 1
+
+[node name="CountdownBox" parent="." node_paths=PackedStringArray("trigger_node") instance=ExtResource("5_63b4a")]
+position = Vector2(632, 312)
+trigger_node = NodePath("../Button")
 
 [node name="TileMapLayer" type="TileMapLayer" parent="."]
 modulate = Color(3.1285e-06, 0.752713, 0.465708, 1)

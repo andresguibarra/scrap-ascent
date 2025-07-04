@@ -4,7 +4,7 @@ class_name Weapon
 @export var throw_force: float = 350
 @export var attract_speed: float = 900.0
 @export var shoot_cooldown: float = 0.3
-@export var knockback_force: float = 300.0
+@export var knockback_force: float = 120
 
 var is_held: bool = false
 var facing_right: bool = true
@@ -157,7 +157,7 @@ func _update_facing_direction() -> void:
 
 func _update_flip() -> void:
 	sprite.flip_h = not facing_right
-	shoot_point.position.x = 12 if facing_right else -12
+	shoot_point.position.x = 4 if facing_right else -4
 
 func _update_position_relative_to_holder() -> void:
 	position = Vector2(12 if facing_right else -12, 0)

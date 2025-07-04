@@ -4,6 +4,7 @@
 [ext_resource type="Texture2D" uid="uid://cdu4q4m6hmq55" path="res://Assets/CountdownBox.png" id="2_tadbx"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_wo4m1"]
+size = Vector2(16, 16)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_fjqmv"]
 atlas = ExtResource("2_tadbx")
@@ -95,6 +96,7 @@ script = ExtResource("1_gx2xq")
 shape = SubResource("RectangleShape2D_wo4m1")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+modulate = Color(0.545098, 0.784314, 0.509804, 1)
 sprite_frames = SubResource("SpriteFrames_xaoey")
 animation = &"Countdown"
-frame_progress = 0.759429
+frame_progress = 0.410409
