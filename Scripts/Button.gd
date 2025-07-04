@@ -104,9 +104,9 @@ func _activate_permanent_button() -> void:
 	if sprite:
 		# Permanent buttons use different frames when activated
 		if type == Type.LIGHT_LEFT:
-			sprite.frame = 3  # Activated light left frame
+			sprite.frame = 2  # Activated light left frame
 		elif type == Type.LIGHT_RIGHT:
-			sprite.frame = 5  # Activated light right frame
+			sprite.frame = 4  # Activated light right frame
 		sprite.modulate = active_color
 	if light:
 		light.enabled = true

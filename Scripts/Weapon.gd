@@ -1,7 +1,7 @@
 extends RigidBody2D
 class_name Weapon
 
-@export var throw_force: float = 450.0
+@export var throw_force: float = 350
 @export var attract_speed: float = 900.0
 @export var shoot_cooldown: float = 0.3
 @export var knockback_force: float = 300.0
@@ -201,7 +201,14 @@ func _apply_throw_physics(throw_direction: Vector2) -> void:
 		_apply_default_throw()
 
 func _apply_default_throw() -> void:
-	var throw_angle := Vector2(1 if facing_right else -1, -1).normalized()
+	var angle_deg := 60.0 # el ángulo que quieras
+	var dir := 1 if facing_right else -1
+
+	# Pasas de grados a radianes y obtienes el vector (cos θ, sen θ)
+	var throw_angle := Vector2(
+		cos(deg_to_rad(angle_deg)) * dir,
+		-sin(deg_to_rad(angle_deg))            # y negativo porque “-y” es arriba
+	).normalized()
 	var throw_velocity := throw_angle * throw_force
 	
 	_add_holder_momentum(throw_velocity)
