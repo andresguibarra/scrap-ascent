@@ -1,6 +1,6 @@
 [gd_scene load_steps=4 format=3 uid="uid://sy0hpc5q6yh8"]
 
-[ext_resource type="Script" uid="uid://dfl7bgxyfd32f" path="res://Scripts/GloxBox.gd" id="1_w3uer"]
+[ext_resource type="Script" uid="uid://cewi4l3pmrpv" path="res://Scripts/GlowBox.gd" id="1_w3uer"]
 [ext_resource type="Texture2D" uid="uid://b5l6q5k21y4cd" path="res://Assets/Tileset.png" id="2_7u0tu"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_yaero"]
@@ -16,3 +16,4 @@ frame = 2
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("RectangleShape2D_yaero")
+debug_color = Color(0.910663, 0.222269, 0.500442, 0.42)
