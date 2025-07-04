@@ -66,6 +66,13 @@ var weapon_instance: Weapon = null
 var flip_cooldown_timer: float = 0.0
 var last_flip_direction: float = 0.0
 
+# Directional input timing for brief press vs hold mechanic
+var left_input_start_time: float = 0.0
+var right_input_start_time: float = 0.0
+var input_hold_threshold: float = 0.15  # Time in seconds to distinguish brief press vs hold
+var was_pressing_left: bool = false
+var was_pressing_right: bool = false
+
 @onready var edge_raycast: RayCast2D = $EdgeRayCast2D
 @onready var wall_raycast: RayCast2D = $WallRayCast2D
 @onready var wall_left_raycast: RayCast2D = $WallLeftRayCast2D
@@ -179,6 +186,10 @@ func _update_timers(delta: float) -> void:
 	# Update wall jump cooldown
 	if wall_jump_cooldown > 0.0:
 		wall_jump_cooldown -= delta
+	
+	# Update directional input timing for controlled enemies
+	if current_state == State.CONTROLLED:
+		_update_directional_input_timing(delta)
 
 func _update_physics(delta: float) -> void:
 	var currently_on_floor = is_on_floor()
@@ -314,11 +325,71 @@ func _should_dash(dash_input: bool, direction: Vector2) -> bool:
 	return true
 
 func _apply_horizontal_movement(direction_x: float) -> void:
-	if direction_x != 0:
-		velocity.x = direction_x * ai_speed * 1.5
-		_flip_to_direction(direction_x)
+	# Handle brief press vs hold logic only when controlled and on ground
+	if current_state == State.CONTROLLED and is_on_floor():
+		_handle_ground_directional_input(direction_x)
 	else:
+		# Original behavior for AI, INERT, or when in air
+		if direction_x != 0:
+			velocity.x = direction_x * ai_speed * 1.5
+			_flip_to_direction(direction_x)
+		else:
+			velocity.x = move_toward(velocity.x, 0, ai_speed * 2.0)
+
+func _handle_ground_directional_input(direction_x: float) -> void:
+	var is_pressing_left := direction_x < 0
+	var is_pressing_right := direction_x > 0
+	var current_facing_direction := get_facing_direction()
+	
+	if direction_x != 0:
+		var input_direction := sign(direction_x)
+		var input_duration := 0.0
+		
+		# Get how long we've been pressing this direction
+		if input_direction < 0:  # Left
+			input_duration = left_input_start_time
+		else:  # Right
+			input_duration = right_input_start_time
+		
+		# Check if this is opposite to current facing direction
+		var is_opposite_direction := (input_direction > 0 and current_facing_direction < 0) or (input_direction < 0 and current_facing_direction > 0)
+		
+		# Brief press in opposite direction: only change facing, don't move
+		if is_opposite_direction and input_duration < input_hold_threshold:
+			_flip_to_direction(input_direction)
+			# Don't set velocity, just change facing
+			velocity.x = move_toward(velocity.x, 0, ai_speed * 2.0)
+		else:
+			# Hold or same direction: normal movement
+			velocity.x = direction_x * ai_speed * 1.5
+			_flip_to_direction(direction_x)
+	else:
+		# No input: decelerate
 		velocity.x = move_toward(velocity.x, 0, ai_speed * 2.0)
+
+func _update_directional_input_timing(delta: float) -> void:
+	var is_pressing_left := InputManager.is_move_left_pressed()
+	var is_pressing_right := InputManager.is_move_right_pressed()
+	
+	# Track left input timing
+	if is_pressing_left:
+		if not was_pressing_left:
+			left_input_start_time = 0.0  # Reset timer when starting to press
+		left_input_start_time += delta
+	else:
+		left_input_start_time = 0.0
+	
+	# Track right input timing  
+	if is_pressing_right:
+		if not was_pressing_right:
+			right_input_start_time = 0.0  # Reset timer when starting to press
+		right_input_start_time += delta
+	else:
+		right_input_start_time = 0.0
+	
+	# Update previous state
+	was_pressing_left = is_pressing_left
+	was_pressing_right = is_pressing_right
 
 func _apply_jump(jump_input: bool) -> void:
 	var tier_skills = skills.get(tier, [Skill.MOVE, Skill.JUMP])
