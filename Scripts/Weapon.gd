@@ -189,7 +189,7 @@ func _update_flip() -> void:
 	shoot_point.position.x = 2 if facing_right else -2
 
 func _update_position_relative_to_holder() -> void:
-	position = Vector2(8 if facing_right else -8, 0)
+	position = Vector2(12 if facing_right else -12, 0)
 
 # =============================================================================
 # WEAPON DROPPING AND PICKUP
