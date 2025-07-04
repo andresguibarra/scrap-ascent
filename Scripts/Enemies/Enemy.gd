@@ -1,3 +1,4 @@
+@tool
 extends CharacterBody2D
 class_name Enemy
 
@@ -9,8 +10,16 @@ var skills = {
 	3: [Skill.MOVE, Skill.JUMP, Skill.DASH, Skill.WALL_CLIMB],
 	4: [Skill.MOVE, Skill.JUMP, Skill.DOUBLE_JUMP, Skill.DASH, Skill.WALL_CLIMB],
 }
-@export var tier = 1
-@export var has_weapon = false
+@export var tier = 1:
+	set(new_tier):
+		tier = new_tier
+		if Engine.is_editor_hint():
+			_update_editor_visuals()
+@export var has_weapon = false:
+	set(new_has_weapon):
+		has_weapon = new_has_weapon
+		if Engine.is_editor_hint():
+			_update_editor_visuals()
 @export var jump_velocity: float = -360.0
 @export var ai_speed: float = 100.0
 @export var dash_speed: float = 500.0
@@ -76,6 +85,12 @@ var last_flip_direction: float = 0.0
 @onready var damage_particles: GPUParticles2D = $DamageParticles
 
 func _ready() -> void:
+	if Engine.is_editor_hint():
+		# In editor mode, only update visuals
+		call_deferred("_update_editor_visuals")
+		return
+		
+	# Runtime initialization only
 	name = "Enemy"
 	add_to_group("enemies")
 	_setup_tier_configuration()
@@ -88,6 +103,73 @@ func _ready() -> void:
 	call_deferred("_initialize_eyes_state")
 	# Debug print
 	_print_configuration_debug()
+
+func _process(delta: float) -> void:
+	if Engine.is_editor_hint():
+		# Editor mode: only update visuals when properties change
+		return
+		
+	# Runtime processing
+	_update_timers(delta)
+	_update_physics(delta)
+	_handle_state_logic()
+	_update_animation()
+	move_and_slide()
+
+func _update_editor_visuals() -> void:
+	# Update visuals in editor mode only
+	if not Engine.is_editor_hint():
+		return
+		
+	# Ensure we have the sprite node
+	if not animated_sprite:
+		animated_sprite = get_node_or_null("AnimatedSprite2D")
+	
+	if animated_sprite:
+		# Update tier color
+		animated_sprite.modulate = get_tier_color()
+		
+		# Set default animation if available
+		if animated_sprite.sprite_frames:
+			if animated_sprite.sprite_frames.has_animation("MoveLeft"):
+				animated_sprite.animation = "MoveLeft"
+				animated_sprite.frame = 0
+			elif animated_sprite.sprite_frames.has_animation("Idle"):
+				animated_sprite.animation = "Idle"
+				animated_sprite.frame = 0
+	
+	# Handle weapon visibility
+	_update_weapon_in_editor()
+
+func _update_weapon_in_editor() -> void:
+	# Handle weapon visibility in editor mode
+	if not Engine.is_editor_hint():
+		return
+		
+	# Find existing weapon child
+	var existing_weapon = null
+	for child in get_children():
+		if child.name == "Weapon" or child.get_script() and child.get_script().get_global_name() == "Weapon":
+			existing_weapon = child
+			break
+	
+	if has_weapon:
+		# Show/create weapon
+		if not existing_weapon:
+			# Try to instantiate weapon for preview
+			var weapon_scene_path = "res://Scenes/Weapon.tscn"
+			if ResourceLoader.exists(weapon_scene_path):
+				var weapon_scene = load(weapon_scene_path)
+				if weapon_scene:
+					var weapon_preview = weapon_scene.instantiate()
+					weapon_preview.name = "Weapon"
+					add_child(weapon_preview)
+		elif existing_weapon:
+			existing_weapon.visible = true
+	else:
+		# Hide weapon
+		if existing_weapon:
+			existing_weapon.visible = false
 
 func _initialize_eyes_state() -> void:
 	if eyes_sprite:
@@ -146,13 +228,6 @@ func _print_configuration_debug() -> void:
 			Skill.WALL_CLIMB: skill_names.append("WALL_CLIMB")
 	
 	print("Enemy configured - Tier: ", tier, " (", tier_color_name, "), Has Weapon: ", has_weapon, ", Skills: ", skill_names)
-
-func _process(delta: float) -> void:
-	_update_timers(delta)
-	_update_physics(delta)
-	_handle_state_logic()
-	_update_animation()
-	move_and_slide()
 
 func _update_timers(delta: float) -> void:
 	if is_dashing:
