@@ -331,9 +331,8 @@ func _apply_horizontal_movement(direction_x: float) -> void:
 			direction_change_timer = 0.15  # 150ms threshold
 			last_input_direction = input_direction
 		
-		# If opposite direction and within brief press window, only turn without moving
-		var current_facing := get_facing_direction()
-		if input_direction != current_facing and direction_change_timer > 0.0:
+		# If within brief press window, only turn without moving
+		if direction_change_timer > 0.0:
 			_flip_to_direction(input_direction)
 			velocity.x = move_toward(velocity.x, 0, ai_speed * 2.0)
 			return
