@@ -125,6 +125,10 @@ func _get_safe_spawn_position() -> Vector2:
 	
 	# Check if there's a clear path from weapon center to shoot point
 	var space_state := get_world_2d().direct_space_state
+	if not space_state:
+		# Fallback if no physics space available
+		return shoot_point.global_position
+	
 	var query := PhysicsRayQueryParameters2D.create(
 		global_position,
 		shoot_point.global_position
