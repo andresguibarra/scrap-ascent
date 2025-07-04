@@ -277,6 +277,8 @@ func posses():
 	current_state = State.CONTROLLED
 	_update_visual_state()
 	_activate_possession_light()
+	# Reset input timing when taking control
+	_reset_input_timing()
 
 func is_controlled():
 	return current_state == State.CONTROLLED
@@ -391,6 +393,12 @@ func _update_directional_input_timing(delta: float) -> void:
 	was_pressing_left = is_pressing_left
 	was_pressing_right = is_pressing_right
 
+func _reset_input_timing() -> void:
+	left_input_start_time = 0.0
+	right_input_start_time = 0.0
+	was_pressing_left = false
+	was_pressing_right = false
+
 func _apply_jump(jump_input: bool) -> void:
 	var tier_skills = skills.get(tier, [Skill.MOVE, Skill.JUMP])
 	if not (Skill.JUMP in tier_skills):
@@ -498,6 +506,9 @@ func _release_control() -> void:
 	# Update visual state
 	_update_visual_state()
 	_deactivate_possession_light()
+	
+	# Reset input timing when releasing control
+	_reset_input_timing()
 
 func _preserve_momentum_after_release(previous_velocity: Vector2) -> void:
 	# Keep the velocity to maintain inertia
