@@ -153,6 +153,7 @@ func _process(delta: float) -> void:
 	_handle_state_logic()
 	_update_animation()
 	move_and_slide()
+	_check_dash_collision()
 
 func _update_timers(delta: float) -> void:
 	if is_dashing:
@@ -391,6 +392,10 @@ func _perform_dash(direction: float) -> void:
 	velocity.y = 0
 	_flip_to_direction(direction)
 
+func _check_dash_collision() -> void:
+	if is_dashing and is_on_wall():
+		is_dashing = false
+		dash_timer = 0.0
 
 func _flip_to_direction(dir: float) -> void:
 	if dir > 0:
