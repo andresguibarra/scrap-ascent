@@ -15,12 +15,11 @@ var skills = {
 @export var ai_speed: float = 100.0
 @export var dash_speed: float = 500.0
 @export var dash_duration: float = 0.13
-@export var coyote_time: float = 0.2
-@export var jump_buffer_time: float = 0.2
+@export var coyote_time: float = 0.1
+@export var jump_buffer_time: float = 0.01
 @export var flip_cooldown_time: float = 0.5  # Time to wait before allowing another flip
 @export var wall_slide_speed: float = 50.0  # Speed when sliding down a wall
-@export var wall_jump_velocity: Vector2 = Vector2(250.0, -300.0)  # Horizontal and vertical push from wall
-@export var wall_jump_cooldown_time: float = 0.6  # Time before can grab same wall again
+@export var wall_jump_cooldown_time: float = 0.8  # Time before can grab same wall again
 
 # Tier colors for AI state
 @export var tier_1_color: Color = Color(0.8, 0.4, 0.4, 1.0)  # Red
@@ -357,24 +356,20 @@ func _execute_jump() -> void:
 	jumps_remaining -= 1
 
 func _execute_simple_wall_jump() -> void:
-	# Simple wall jump - just push away from wall
-	var wall_direction = get_wall_normal()
-	velocity.x = wall_direction.x * wall_jump_velocity.x
-	velocity.y = wall_jump_velocity.y
+	# Simple wall jump - only vertical velocity, player controls horizontal
+	velocity.y = jump_velocity  # Use same jump velocity as normal jumps
 	jumps_remaining -= 1
-	_flip_to_direction(wall_direction.x)
 	
 	# Set cooldown for this wall
+	var wall_direction = get_wall_normal()
 	wall_jump_cooldown = wall_jump_cooldown_time
 	last_wall_jump_normal = wall_direction
 
 func _execute_wall_coyote_jump() -> void:
-	# Wall jump using coyote time - use stored wall normal
-	velocity.x = wall_coyote_normal.x * wall_jump_velocity.x
-	velocity.y = wall_jump_velocity.y
+	# Wall jump using coyote time - only vertical velocity, player controls horizontal
+	velocity.y = jump_velocity  # Use same jump velocity as normal jumps
 	jumps_remaining -= 1
 	wall_coyote_timer = 0.0  # Used the coyote time
-	_flip_to_direction(wall_coyote_normal.x)
 	
 	# Set cooldown for this wall
 	wall_jump_cooldown = wall_jump_cooldown_time

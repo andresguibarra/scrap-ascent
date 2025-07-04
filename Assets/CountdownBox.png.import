@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://ba3d1srbk6y4l"
-path="res://.godot/imported/Tileset.png-6c33cbb2ef7a22fc58a08f1fe360de85.ctex"
+uid="uid://cdu4q4m6hmq55"
+path="res://.godot/imported/CountdownBox.png-562aa78a32dd3386303eac765cdb39b0.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Aseprite/Tileset.png"
-dest_files=["res://.godot/imported/Tileset.png-6c33cbb2ef7a22fc58a08f1fe360de85.ctex"]
+source_file="res://Assets/CountdownBox.png"
+dest_files=["res://.godot/imported/CountdownBox.png-562aa78a32dd3386303eac765cdb39b0.ctex"]
 
 [params]
 
