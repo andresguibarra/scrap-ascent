@@ -20,6 +20,11 @@ var skills = {
 		has_weapon = new_has_weapon
 		if Engine.is_editor_hint():
 			_update_editor_visuals()
+@export var face_right = false:
+	set(new_face_right):
+		face_right = new_face_right
+		if Engine.is_editor_hint():
+			_update_editor_visuals()
 @export var jump_velocity: float = -360.0
 @export var ai_speed: float = 100.0
 @export var dash_speed: float = 500.0
@@ -129,6 +134,10 @@ func _update_editor_visuals() -> void:
 		# Update tier color
 		animated_sprite.modulate = get_tier_color()
 		
+		# Update sprite flip for facing direction
+		# Sprites face left by default, so flip_h = true means facing right
+		animated_sprite.flip_h = face_right
+		
 		# Set default animation if available
 		if animated_sprite.sprite_frames:
 			if animated_sprite.sprite_frames.has_animation("MoveLeft"):
@@ -164,8 +173,17 @@ func _update_weapon_in_editor() -> void:
 					var weapon_preview = weapon_scene.instantiate()
 					weapon_preview.name = "Weapon"
 					add_child(weapon_preview)
-		elif existing_weapon:
+					existing_weapon = weapon_preview
+		
+		# Update weapon position and flip based on facing direction
+		if existing_weapon:
 			existing_weapon.visible = true
+			# Position weapon relative to enemy facing direction
+			existing_weapon.position = Vector2(12 if face_right else -12, 0)
+			# Update weapon sprite flip if it has a sprite
+			var weapon_sprite = existing_weapon.get_node_or_null("Sprite2D")
+			if weapon_sprite:
+				weapon_sprite.flip_h = not face_right  # Weapon sprite logic might be inverted
 	else:
 		# Hide weapon
 		if existing_weapon:
