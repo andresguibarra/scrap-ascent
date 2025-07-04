@@ -4,9 +4,11 @@ class_name Projectile
 @export var speed: float = 500.0
 @export var damage: float = 10.0
 @export var impact_duration: float = 0.1  # Duration to show impact frames
+@export var shooter_grace_period: float = 0.1  # Time before projectile can hit its shooter
 
 var has_hit: bool = false
 var shooter: Node = null  # Reference to who shot this projectile
+var shooter_grace_timer: float = 0.0
 
 @onready var sprite: Sprite2D = $Sprite2D
 @onready var impact_timer: Timer = Timer.new()
@@ -30,9 +32,14 @@ func _ready() -> void:
 	if sprite:
 		sprite.frame = 0
 
+func _physics_process(delta: float) -> void:
+	if shooter_grace_timer > 0.0:
+		shooter_grace_timer -= delta
+
 func launch(direction: Vector2, from_shooter: Node = null) -> void:
 	linear_velocity = direction * speed
 	shooter = from_shooter
+	shooter_grace_timer = shooter_grace_period
 	
 	# Set sprite direction based on movement direction
 	if sprite and direction.x != 0:
@@ -45,6 +52,10 @@ func _on_timer_timeout() -> void:
 func _on_body_entered(body: Node) -> void:
 	# Prevent multiple hits
 	if has_hit:
+		return
+	
+	# Don't hit the shooter during grace period
+	if body == shooter and shooter_grace_timer > 0.0:
 		return
 		
 	has_hit = true

@@ -114,9 +114,34 @@ func _create_projectile() -> Projectile:
 		return null
 
 func _launch_projectile(projectile: Projectile) -> void:
-	projectile.global_position = shoot_point.global_position
+	var spawn_position := _get_safe_spawn_position()
+	projectile.global_position = spawn_position
 	var shoot_direction := Vector2(1 if facing_right else -1, 0)
 	projectile.launch(shoot_direction, holder)
+
+func _get_safe_spawn_position() -> Vector2:
+	if not holder:
+		return shoot_point.global_position
+	
+	# Check if there's a clear path from weapon center to shoot point
+	var space_state := get_world_2d().direct_space_state
+	var query := PhysicsRayQueryParameters2D.create(
+		global_position,
+		shoot_point.global_position
+	)
+	query.collision_mask = 1  # Only check world layer
+	query.exclude = [self]  # Exclude the weapon itself
+	
+	var result := space_state.intersect_ray(query)
+	
+	if result:
+		# There's an obstacle, spawn projectile closer to weapon center
+		var safe_distance := global_position.distance_to(result.position) * 0.8
+		var direction := (shoot_point.global_position - global_position).normalized()
+		return global_position + direction * safe_distance
+	else:
+		# Path is clear, use normal shoot point
+		return shoot_point.global_position
 
 func _apply_recoil_if_needed() -> void:
 	if not is_held:
@@ -157,10 +182,10 @@ func _update_facing_direction() -> void:
 
 func _update_flip() -> void:
 	sprite.flip_h = not facing_right
-	shoot_point.position.x = 4 if facing_right else -4
+	shoot_point.position.x = 2 if facing_right else -2
 
 func _update_position_relative_to_holder() -> void:
-	position = Vector2(12 if facing_right else -12, 0)
+	position = Vector2(8 if facing_right else -8, 0)
 
 # =============================================================================
 # WEAPON DROPPING AND PICKUP
