@@ -80,6 +80,10 @@ var weapon_instance: Weapon = null
 var flip_cooldown_timer: float = 0.0
 var last_flip_direction: float = 0.0
 
+# Brief press vs hold mechanic
+var direction_change_timer: float = 0.0
+var last_input_direction: float = 0.0
+
 @onready var edge_raycast: RayCast2D = $EdgeRayCast2D
 @onready var wall_raycast: RayCast2D = $WallRayCast2D
 @onready var wall_left_raycast: RayCast2D = $WallLeftRayCast2D
@@ -272,6 +276,10 @@ func _update_timers(delta: float) -> void:
 	# Update wall jump cooldown
 	if wall_jump_cooldown > 0.0:
 		wall_jump_cooldown -= delta
+	
+	# Update direction change timer
+	if direction_change_timer > 0.0:
+		direction_change_timer -= delta
 
 func _update_physics(delta: float) -> void:
 	var currently_on_floor = is_on_floor()
@@ -407,6 +415,22 @@ func _should_dash(dash_input: bool, direction: Vector2) -> bool:
 	return true
 
 func _apply_horizontal_movement(direction_x: float) -> void:
+	# Brief press vs hold mechanic: only applies when controlled and on ground
+	if current_state == State.CONTROLLED and is_on_floor() and direction_x != 0:
+		var input_direction := sign(direction_x) as int
+		
+		# Check if direction changed
+		if input_direction != last_input_direction:
+			direction_change_timer = 0.075  # 75ms threshold
+			last_input_direction = input_direction
+		
+		# If within brief press window, only turn without moving
+		if direction_change_timer > 0.0:
+			_flip_to_direction(input_direction)
+			velocity.x = move_toward(velocity.x, 0, ai_speed * 2.0)
+			return
+	
+	# Original movement behavior
 	if direction_x != 0:
 		velocity.x = direction_x * ai_speed * 1.5
 		_flip_to_direction(direction_x)
@@ -484,6 +508,10 @@ func _perform_dash(direction: float) -> void:
 	velocity.y = 0
 	_flip_to_direction(direction)
 
+func _check_dash_collision() -> void:
+	if is_dashing and is_on_wall():
+		is_dashing = false
+		dash_timer = 0.0
 
 func _flip_to_direction(dir: float) -> void:
 	if dir > 0:
