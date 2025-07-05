@@ -328,7 +328,7 @@ func _apply_horizontal_movement(direction_x: float) -> void:
 		
 		# Check if direction changed
 		if input_direction != last_input_direction:
-			direction_change_timer = 0.075  # 150ms threshold
+			direction_change_timer = 0.075  # 75ms threshold
 			last_input_direction = input_direction
 		
 		# If within brief press window, only turn without moving
