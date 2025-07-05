@@ -22,7 +22,7 @@ var skills = {
 			_update_editor_visuals()
 @export var face_right = false:
 	set(new_face_right):
-		face_right = new_face_right
+		face_right = !!new_face_right
 		if Engine.is_editor_hint():
 			_update_editor_visuals()
 @export var jump_velocity: float = -360.0
@@ -86,8 +86,6 @@ var last_input_direction: float = 0.0
 
 @onready var edge_raycast: RayCast2D = $EdgeRayCast2D
 @onready var wall_raycast: RayCast2D = $WallRayCast2D
-@onready var wall_left_raycast: RayCast2D = $WallLeftRayCast2D
-@onready var wall_right_raycast: RayCast2D = $WallRightRayCast2D
 @onready var animated_sprite: AnimatedSprite2D = $AnimatedSprite2D
 @onready var eyes_sprite: AnimatedSprite2D = $Eyes
 @onready var light: PointLight2D = $PointLight2D

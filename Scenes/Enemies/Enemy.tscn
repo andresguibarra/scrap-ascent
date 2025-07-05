@@ -225,15 +225,10 @@ target_position = Vector2(15, 15)
 [node name="WallRayCast2D" type="RayCast2D" parent="."]
 target_position = Vector2(8, 0)
 
-[node name="WallLeftRayCast2D" type="RayCast2D" parent="."]
-target_position = Vector2(-10, 0)
-
-[node name="WallRightRayCast2D" type="RayCast2D" parent="."]
-target_position = Vector2(10, 0)
-
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+modulate = Color(0.8, 0.4, 0.4, 1)
 sprite_frames = SubResource("SpriteFrames_rybfp")
-animation = &"WallSlide"
+animation = &"MoveLeft"
 
 [node name="PointLight2D" type="PointLight2D" parent="."]
 enabled = false
