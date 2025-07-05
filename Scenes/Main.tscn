@@ -1,4 +1,4 @@
-[gd_scene load_steps=34 format=4 uid="uid://dm25p6km3qlds"]
+[gd_scene load_steps=35 format=4 uid="uid://dm25p6km3qlds"]
 
 [ext_resource type="PackedScene" uid="uid://c8h3d5k2nap1q" path="res://Scenes/Orb.tscn" id="1_kln2b"]
 [ext_resource type="Script" uid="uid://chfcajx0mey86" path="res://Scripts/CameraFollow.gd" id="2_rgh2o"]
@@ -10,6 +10,7 @@
 [ext_resource type="PackedScene" uid="uid://br3eqxxhw6lmw" path="res://Scenes/Enemies/Enemy.tscn" id="6_v1gob"]
 [ext_resource type="PackedScene" uid="uid://djw6kwtfcfuvk" path="res://Scenes/CountdownBox.tscn" id="8_bmxlf"]
 [ext_resource type="PackedScene" uid="uid://b6q3wfgv2mrcw" path="res://Scenes/Door.tscn" id="9_vy5pj"]
+[ext_resource type="PackedScene" uid="uid://dmfgxomrx6leb" path="res://Scenes/GameUI.tscn" id="10_grg3l"]
 [ext_resource type="PackedScene" uid="uid://b760qg272jrae" path="res://Scenes/Exit.tscn" id="11_4kpch"]
 
 [sub_resource type="Environment" id="Environment_v1gob"]
@@ -389,6 +390,8 @@ progress_curve = SubResource("Curve_bmxlf")
 trigger_nodes = [NodePath("../Button"), NodePath("../Button2")]
 path_size_tiles = 4
 door_size_tiles = 4
+
+[node name="GameUI" parent="." instance=ExtResource("10_grg3l")]
 
 [node name="PuzzleWithDash" type="Node" parent="."]
 metadata/_edit_lock_ = true
