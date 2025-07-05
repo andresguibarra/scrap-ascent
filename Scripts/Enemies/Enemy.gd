@@ -629,15 +629,6 @@ func destroy_chip() -> void:
 		current_state = State.INERT
 		_update_visual_state()
 		_generate_damage_particles()
-	
-	# Drop weapon when chip is destroyed
-	if weapon_instance:
-		_drop_weapon_on_destroy()
-
-func _drop_weapon_on_destroy() -> void:
-	if weapon_instance and weapon_instance.is_held:
-		weapon_instance.drop()
-		weapon_instance = null
 
 func _update_visual_state() -> void:
 	match current_state:
