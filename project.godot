@@ -13,7 +13,7 @@ config_version=5
 config/name="Scrap Ascent"
 run/main_scene="uid://dm25p6km3qlds"
 config/features=PackedStringArray("4.4", "GL Compatibility")
-config/icon="uid://vj86ups5wxa1"
+config/icon="uid://cha0vm8q7b24i"
 
 [autoload]
 

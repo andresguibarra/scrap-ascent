@@ -243,12 +243,12 @@ func _check_for_crushing() -> void:
 			crushed_objects.append(body)
 
 func _crush_object(object: CharacterBody2D) -> void:
-	# Apply damage/destruction based on object type
-	if object.is_in_group("enemies"):
-		object.destroy_chip()
-	elif object.is_in_group("orbs"):
-		# Orbs don't have destroy_chip, but we still need to move them
-		pass
+	## Apply damage/destruction based on object type
+	#if object.is_in_group("enemies"):
+		#object.destroy_chip()
+	#elif object.is_in_group("orbs"):
+		## Orbs don't have destroy_chip, but we still need to move them
+		#pass
 	
 	# Move object to the closest marker
 	_move_to_closest_marker(object)

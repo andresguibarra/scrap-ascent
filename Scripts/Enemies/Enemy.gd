@@ -14,6 +14,8 @@ var skills = {
 @export var current_state: State = State.AI:
 	set(new_state):
 		current_state = new_state
+		if current_state == State.INERT:
+			chip_destroyed = true
 		if Engine.is_editor_hint():
 			_update_visual_state()
 @export var tier = 1:
