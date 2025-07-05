@@ -10,6 +10,12 @@ var skills = {
 	3: [Skill.MOVE, Skill.JUMP, Skill.DASH, Skill.WALL_CLIMB],
 	4: [Skill.MOVE, Skill.JUMP, Skill.DOUBLE_JUMP, Skill.DASH, Skill.WALL_CLIMB],
 }
+
+@export var current_state: State = State.AI:
+	set(new_state):
+		current_state = new_state
+		if Engine.is_editor_hint():
+			_update_visual_state()
 @export var tier = 1:
 	set(new_tier):
 		tier = new_tier
@@ -45,7 +51,7 @@ var skills = {
 @export var inert_color: Color = Color(0.3, 0.3, 0.3, 1.0)      # Gray
 
 var gravity: float = ProjectSettings.get_setting("physics/2d/default_gravity")
-var current_state: State = State.AI
+
 var chip_destroyed: bool = false
 var is_dashing: bool = false
 var dash_timer: float = 0.0

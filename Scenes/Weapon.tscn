@@ -4,6 +4,7 @@
 [ext_resource type="Texture2D" uid="uid://cv4ikre6ylup2" path="res://Assets/RobotGunRight.png" id="2_sw2lr"]
 
 [sub_resource type="PhysicsMaterial" id="PhysicsMaterial_m5ws0"]
+friction = 0.3
 bounce = 0.1
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_1"]

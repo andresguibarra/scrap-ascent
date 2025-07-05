@@ -2,6 +2,7 @@
 extends Node2D
 
 enum DoorState { OPEN, CLOSED, OPENING, CLOSING }
+enum ActivationCondition { ALL, ANY }
 
 @export var animation_duration: float = 1.0
 @export var progress_curve: Curve = null
@@ -12,7 +13,8 @@ static func _create_default_curve() -> Curve:
 	curve.add_point(Vector2(1.0, 1.0), 2.0, 0.0)
 	return curve
 @export var start_open: bool = false
-@export var trigger_node: Node2D
+@export var trigger_nodes: Array[Node2D] = []
+@export var activation_condition: ActivationCondition = ActivationCondition.ALL
 @export var path_size_tiles: int = 1:
 	set(value):
 		path_size_tiles = max(1, value)
@@ -100,19 +102,46 @@ func _set_initial_state() -> void:
 		_set_path_position(0.0)  # 0.0 = closed
 
 func _connect_to_trigger() -> void:
-	if trigger_node and trigger_node.has_signal("activated"):
-		if not trigger_node.activated.is_connected(_on_trigger_activated):
-			trigger_node.activated.connect(_on_trigger_activated)
+	for trigger in trigger_nodes:
+		if not trigger:
+			continue
+			
+		if trigger.has_signal("activated"):
+			if not trigger.activated.is_connected(_on_trigger_changed):
+				trigger.activated.connect(_on_trigger_changed)
+		
+		if trigger.has_signal("deactivated"):
+			if not trigger.deactivated.is_connected(_on_trigger_changed):
+				trigger.deactivated.connect(_on_trigger_changed)
+
+func _on_trigger_changed() -> void:
+	var should_open := _evaluate_trigger_conditions()
 	
-	if trigger_node and trigger_node.has_signal("deactivated"):
-		if not trigger_node.deactivated.is_connected(_on_trigger_deactivated):
-			trigger_node.deactivated.connect(_on_trigger_deactivated)
+	if should_open and (current_state == DoorState.CLOSED or current_state == DoorState.CLOSING):
+		open_door()
+	elif not should_open and (current_state == DoorState.OPEN or current_state == DoorState.OPENING):
+		close_door()
 
-func _on_trigger_activated() -> void:
-	open_door()
-
-func _on_trigger_deactivated() -> void:
-	close_door()
+func _evaluate_trigger_conditions() -> bool:
+	if trigger_nodes.is_empty():
+		return false
+	
+	match activation_condition:
+		ActivationCondition.ALL:
+			# All triggers must be activated
+			for trigger in trigger_nodes:
+				if not trigger or not trigger.has_method("get_is_active") or not trigger.get_is_active():
+					return false
+			return true
+		
+		ActivationCondition.ANY:
+			# At least one trigger must be activated
+			for trigger in trigger_nodes:
+				if trigger and trigger.has_method("get_is_active") and trigger.get_is_active():
+					return true
+			return false
+	
+	return false
 
 func _set_path_position(progress: float) -> void:
 	if path_follow:
