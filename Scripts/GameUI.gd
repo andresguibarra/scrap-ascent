@@ -10,6 +10,9 @@ var hold_timer: float = 0.0
 func _ready() -> void:
 	# Set up the restart label
 	_setup_restart_label()
+	
+	# Enable processing during pause for win condition
+	process_mode = Node.PROCESS_MODE_ALWAYS
 
 func _process(delta: float) -> void:
 	# Follow the camera position
@@ -40,6 +43,13 @@ func _update_position_to_camera() -> void:
 		size = visible_size
 
 func _handle_restart_input(delta: float) -> void:
+	# Check if game is paused (win condition) - then R works instantly
+	if get_tree().paused:
+		if Input.is_action_just_pressed("ui_select") or Input.is_key_pressed(KEY_R):
+			_restart_game()
+		return
+	
+	# Normal gameplay - hold R for 3 seconds
 	var r_pressed = Input.is_key_pressed(KEY_R)
 	
 	if r_pressed:
