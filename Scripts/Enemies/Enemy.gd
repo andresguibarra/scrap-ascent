@@ -324,11 +324,11 @@ func _should_dash(dash_input: bool, direction: Vector2) -> bool:
 func _apply_horizontal_movement(direction_x: float) -> void:
 	# Brief press vs hold mechanic: only applies when controlled and on ground
 	if current_state == State.CONTROLLED and is_on_floor() and direction_x != 0:
-		var input_direction := sign(direction_x)
+		var input_direction := sign(direction_x) as int
 		
 		# Check if direction changed
 		if input_direction != last_input_direction:
-			direction_change_timer = 0.15  # 150ms threshold
+			direction_change_timer = 0.075  # 150ms threshold
 			last_input_direction = input_direction
 		
 		# If within brief press window, only turn without moving
