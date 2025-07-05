@@ -19,13 +19,28 @@ static func _create_default_curve() -> Curve:
 	set(value):
 		path_size_tiles = max(1, value)
 		_update_path_size()
+@export var door_size_tiles: int = 1:
+	set(value):
+		door_size_tiles = max(1, value)
+		_update_door_size()
+@export var enable_left_marker: bool = true:
+	set(value):
+		enable_left_marker = value
+		_update_marker_visibility()
+@export var enable_right_marker: bool = true:
+	set(value):
+		enable_right_marker = value
+		_update_marker_visibility()
 
 @onready var path_follow: PathFollow2D = $MovementPath/PathFollow2D
 @onready var crush_detector: Area2D = $MovementPath/PathFollow2D/DoorBody/CrushDetector
 @onready var movement_path: Path2D = $MovementPath
+@onready var door_body: AnimatableBody2D = $MovementPath/PathFollow2D/DoorBody
+@onready var left_marker: Marker2D = $MovementPath/PathFollow2D/LeftMarker
+@onready var right_marker: Marker2D = $MovementPath/PathFollow2D/RightMarker
 
 var current_state: DoorState = DoorState.CLOSED
-var crushed_enemies: Array[CharacterBody2D] = []
+var crushed_objects: Array[CharacterBody2D] = []
 
 var animation_time: float = 0.0
 var is_animating: bool = false
@@ -45,8 +60,12 @@ func _ready() -> void:
 		_set_initial_state()
 		_connect_to_trigger()
 		_update_path_size()
+		_update_door_size()
+		_update_marker_visibility()
 	else:
 		call_deferred("_update_path_size")
+		call_deferred("_update_door_size")
+		call_deferred("_update_marker_visibility")
 
 func _update_path_size():
 	if not movement_path:
@@ -164,8 +183,8 @@ func close_door() -> void:
 	if current_state == DoorState.CLOSED or current_state == DoorState.CLOSING:
 		return
 	
-	# Clear the crushed enemies list when starting to close
-	crushed_enemies.clear()
+	# Clear the crushed objects list when starting to close
+	crushed_objects.clear()
 	current_state = DoorState.CLOSING
 	_start_animation(0.0)
 
@@ -214,26 +233,103 @@ func _check_for_crushing() -> void:
 	
 	var overlapping_bodies = crush_detector.get_overlapping_bodies()
 	for body in overlapping_bodies:
-		if body.is_in_group("enemies") and not body.chip_destroyed and body not in crushed_enemies:
-			_crush_enemy(body)
-			crushed_enemies.append(body)
+		# Handle enemies
+		if body.is_in_group("enemies") and body not in crushed_objects:
+			_crush_object(body)
+			crushed_objects.append(body)
+		# Handle orbs
+		elif body.is_in_group("orbs") and body not in crushed_objects:
+			_crush_object(body)
+			crushed_objects.append(body)
 
-func _crush_enemy(enemy: CharacterBody2D) -> void:
-	enemy.destroy_chip()
+func _crush_object(object: CharacterBody2D) -> void:
+	# Apply damage/destruction based on object type
+	if object.is_in_group("enemies"):
+		object.destroy_chip()
+	elif object.is_in_group("orbs"):
+		# Orbs don't have destroy_chip, but we still need to move them
+		pass
 	
-	var door_body = path_follow.get_child(0) as AnimatableBody2D
+	# Move object to the closest marker
+	_move_to_closest_marker(object)
+
+func _move_to_closest_marker(object: CharacterBody2D) -> void:
+	var available_markers: Array[Marker2D] = []
+	
+	# Collect enabled markers
+	if left_marker and enable_left_marker:
+		available_markers.append(left_marker)
+	if right_marker and enable_right_marker:
+		available_markers.append(right_marker)
+	
+	# If no markers are enabled, use fallback
+	if available_markers.is_empty():
+		print("Door: Warning - No markers enabled, using fallback positioning")
+		_fallback_position_object(object)
+		return
+	
+	# If only one marker is enabled, always use it regardless of position
+	var target_marker: Marker2D
+	if available_markers.size() == 1:
+		target_marker = available_markers[0]
+	else:
+		# Multiple markers enabled, choose the closest one
+		var distance_to_left = object.global_position.distance_to(left_marker.global_position)
+		var distance_to_right = object.global_position.distance_to(right_marker.global_position)
+		target_marker = left_marker if distance_to_left < distance_to_right else right_marker
+	
+	# Move object to the chosen marker position
+	object.global_position = target_marker.global_position
+	
+	# Ensure object is aligned to tile grid (16px tiles)
+	object.global_position.x = round(object.global_position.x / 16.0) * 16.0
+	object.global_position.y = round(object.global_position.y / 16.0) * 16.0
+
+func _fallback_position_object(object: CharacterBody2D) -> void:
+	# Fallback method if markers are not available
 	if not door_body:
 		return
 	
-	# Calculate direction to move enemy
-	var dir = sign(enemy.global_position.x - door_body.global_position.x)
+	# Calculate direction to move object
+	var dir = sign(object.global_position.x - door_body.global_position.x)
 	if dir == 0:
 		dir = 1  # Default to right if centered
 	
-	# Move enemy completely out of door area (2 tiles = 32 pixels to ensure clearance)
-	var displacement = dir * 17
-	enemy.global_position.x += displacement
+	# Move object completely out of door area
+	var displacement = dir * 32  # 2 tiles away
+	object.global_position.x += displacement
 	
-	# Ensure enemy is aligned to tile grid (16px tiles)
-	enemy.global_position.x = round(enemy.global_position.x / 16.0) * 16.0
-	enemy.global_position.y = round(enemy.global_position.y / 16.0) * 16.0
+	# Ensure object is aligned to tile grid (16px tiles)
+	object.global_position.x = round(object.global_position.x / 16.0) * 16.0
+	object.global_position.y = round(object.global_position.y / 16.0) * 16.0
+
+func _update_door_size():
+	if not door_body:
+		return
+	
+	# Scale the door and compensate position to grow downward
+	door_body.scale.y = float(door_size_tiles)
+	
+	# Compensate position: DoorBody is rotated -90 degrees, so Y scale affects X position
+	# door_size_tiles = 1 => position.x = -8
+	# door_size_tiles = 2 => position.x = -16  
+	# door_size_tiles = 3 => position.x = -24
+	door_body.position.x = -8.0 * door_size_tiles
+	
+	# Also adjust marker positions to match the scaled door
+	# Since the door is rotated -90°, markers need to be positioned at the extremes
+	# Formula: (-16 * tiles) + 8 ensures markers stay at door edges when scaled
+	# door_size_tiles = 1 => markers at x = -8  (original position)
+	# door_size_tiles = 2 => markers at x = -24 (extended door edges)  
+	# door_size_tiles = 3 => markers at x = -40 (further extended edges)
+	var marker_x_pos: float = (-16.0 * door_size_tiles) + 8.0
+	if left_marker:
+		left_marker.position.x = marker_x_pos
+	if right_marker:
+		right_marker.position.x = marker_x_pos
+
+func _update_marker_visibility():
+	if left_marker:
+		left_marker.visible = enable_left_marker
+	if right_marker:
+		right_marker.visible = enable_right_marker

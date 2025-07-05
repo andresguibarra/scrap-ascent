@@ -30,6 +30,14 @@ curve = SubResource("Curve2D_mw28t")
 position = Vector2(0, -8)
 rotation = 1.5708
 
+[node name="LeftMarker" type="Marker2D" parent="MovementPath/PathFollow2D"]
+position = Vector2(-8, 16)
+metadata/_edit_lock_ = true
+
+[node name="RightMarker" type="Marker2D" parent="MovementPath/PathFollow2D"]
+position = Vector2(-8, -16)
+metadata/_edit_lock_ = true
+
 [node name="DoorBody" type="AnimatableBody2D" parent="MovementPath/PathFollow2D"]
 position = Vector2(-8, 0)
 rotation = -1.5708
