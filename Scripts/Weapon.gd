@@ -116,7 +116,7 @@ func _create_projectile() -> Projectile:
 func _launch_projectile(projectile: Projectile) -> void:
 	projectile.global_position = shoot_point.global_position
 	var shoot_direction := Vector2(1 if facing_right else -1, 0)
-	projectile.launch(shoot_direction, holder)
+	projectile.launch(shoot_direction, holder, is_held)
 
 func _apply_recoil_if_needed() -> void:
 	if not is_held:
@@ -157,7 +157,7 @@ func _update_facing_direction() -> void:
 
 func _update_flip() -> void:
 	sprite.flip_h = not facing_right
-	shoot_point.position.x = 4 if facing_right else -4
+	shoot_point.position.x = -2 if facing_right else 2
 
 func _update_position_relative_to_holder() -> void:
 	position = Vector2(12 if facing_right else -12, 0)
