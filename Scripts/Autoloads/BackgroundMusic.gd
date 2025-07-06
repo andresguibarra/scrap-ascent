@@ -6,6 +6,7 @@ extends AudioStreamPlayer
 # Available background music tracks
 var music_tracks: Array[AudioStream] = []
 var current_track: AudioStream
+var active_tween: Tween
 
 func _ready() -> void:
 	# Configure as background music
@@ -16,8 +17,8 @@ func _ready() -> void:
 	# Load available music tracks
 	_load_music_tracks()
 	
-	# Select and play random background music
-	_play_random_background_music()
+	# Always start music when scene loads
+	call_deferred("_play_random_background_music")
 
 func _load_music_tracks() -> void:
 	# Load available background music tracks
@@ -34,9 +35,13 @@ func _load_music_tracks() -> void:
 	print("BackgroundMusic: Loaded ", music_tracks.size(), " music tracks")
 
 func _play_random_background_music() -> void:
+	print("BackgroundMusic: _play_random_background_music called")
 	if music_tracks.is_empty():
 		print("BackgroundMusic: No music tracks available")
 		return
+	
+	# Stop any current audio first
+	stop()
 	
 	# Select random track
 	var random_index = randi() % music_tracks.size()
@@ -49,9 +54,12 @@ func _play_random_background_music() -> void:
 		stream.loop = true
 	elif stream is AudioStreamWAV:
 		stream.loop_mode = AudioStreamWAV.LOOP_FORWARD
+	
+	# Ensure volume is correct before playing
+	volume_db = -10.0
 	play()
 	
-	print("BackgroundMusic: Playing random track ", random_index + 1, "/", music_tracks.size())
+	print("BackgroundMusic: Playing random track ", random_index + 1, "/", music_tracks.size(), " at volume ", volume_db)
 
 func play_background_music(music: AudioStream = null) -> void:
 	if music:
@@ -78,20 +86,23 @@ func set_background_volume(new_volume_db: float) -> void:
 	print("BackgroundMusic: Volume set to ", new_volume_db, " dB")
 
 func fade_out(duration: float = 2.0) -> void:
-	var tween = create_tween()
-	tween.tween_property(self, "volume_db", -80.0, duration)
-	tween.tween_callback(stop)
+	_kill_active_tween()
+	active_tween = create_tween()
+	active_tween.tween_property(self, "volume_db", -80.0, duration)
+	active_tween.tween_callback(stop)
 
 func fade_in(duration: float = 2.0) -> void:
+	_kill_active_tween()
 	var original_volume = volume_db
 	volume_db = -80.0
 	play()
-	var tween = create_tween()
-	tween.tween_property(self, "volume_db", original_volume, duration)
+	active_tween = create_tween()
+	active_tween.tween_property(self, "volume_db", original_volume, duration)
 
 func play_victory_sound(victory_music: AudioStream) -> void:
 	if victory_music:
-		# Stop current background music and play victory sound
+		# Kill any active tweens and stop current music
+		_kill_active_tween()
 		stop()
 		stream = victory_music
 		volume_db = 0.0  # Victory sound at full volume
@@ -99,6 +110,17 @@ func play_victory_sound(victory_music: AudioStream) -> void:
 		print("BackgroundMusic: Playing victory sound")
 
 func restore_background_music() -> void:
-	# Select and play a new random track when restoring
+	print("BackgroundMusic: restore_background_music called")
+	# Kill any active tweens first
+	_kill_active_tween()
+	# Stop any current audio
+	stop()
+	# Reset volume and play new music
+	volume_db = -10.0
 	_play_random_background_music()
-	print("BackgroundMusic: Restored background music with new random selection")
+	print("BackgroundMusic: Restored background music")
+
+func _kill_active_tween() -> void:
+	if active_tween and active_tween.is_valid():
+		active_tween.kill()
+		active_tween = null

@@ -318,7 +318,7 @@ position = Vector2(440, 112)
 tier = 2
 
 [node name="Orb" parent="." instance=ExtResource("1_kln2b")]
-position = Vector2(330, 369)
+position = Vector2(344, 370)
 
 [node name="PuzzleWithGun" type="Node" parent="."]
 
@@ -392,6 +392,7 @@ path_size_tiles = 4
 door_size_tiles = 4
 
 [node name="GameUI" parent="." instance=ExtResource("10_grg3l")]
+z_index = 2
 
 [node name="PuzzleWithDash" type="Node" parent="."]
 metadata/_edit_lock_ = true

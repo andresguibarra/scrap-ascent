@@ -224,7 +224,6 @@ double_jump_sound = ExtResource("3_468r6")
 dash_sound = ExtResource("4_0fmw3")
 release_sound = ExtResource("5_n01f6")
 destroy_sound = ExtResource("4_destroy")
-wall_slide_sound = ExtResource("3_468r6")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 position = Vector2(-0.5, 0)

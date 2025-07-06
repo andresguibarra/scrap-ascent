@@ -140,10 +140,10 @@ func _unhandled_input(event: InputEvent) -> void:
 	if has_triggered and event.is_action_pressed("ui_accept"):
 		# Restart the game
 		get_tree().paused = false
-		# Restore background music with a small delay to ensure clean state
+		# Force restart background music before reloading scene
 		if BackgroundMusic:
-			BackgroundMusic.call_deferred("restore_background_music")
-		get_tree().call_deferred("reload_current_scene")
+			BackgroundMusic.restore_background_music()
+		get_tree().reload_current_scene()
 	elif has_triggered and event.is_action_pressed("ui_cancel"):
 		# Quit the game
 		get_tree().quit()
