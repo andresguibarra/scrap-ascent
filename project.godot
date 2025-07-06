@@ -18,6 +18,7 @@ config/icon="uid://cha0vm8q7b24i"
 [autoload]
 
 InputManager="*res://Scripts/Autoloads/InputManager.gd"
+BackgroundMusic="*res://Scenes/Autoloads/BackgroundMusic.tscn"
 
 [display]
 

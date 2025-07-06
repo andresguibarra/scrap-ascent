@@ -3,10 +3,13 @@ extends Area2D
 @export var light_energy: float = 1.5
 @export var light_color: Color = Color(0.9, 0.9, 0.6, 1.0)  # Warm white
 @export var fade_duration: float = 2.0
+@export var win_sound: AudioStream
+@export var win_volume_db: float = 0.0
 
 @onready var light: PointLight2D = $PointLight2D
 @onready var win_ui: Control = $WinUI
 @onready var win_label: Label = $WinUI/WinLabel
+@onready var audio_player: AudioStreamPlayer2D = $AudioStreamPlayer2D
 
 var has_triggered: bool = false
 
@@ -14,6 +17,7 @@ func _ready() -> void:
 	body_entered.connect(_on_body_entered)
 	_setup_light()
 	_setup_win_ui()
+	_setup_audio()
 
 func _setup_light() -> void:
 	if light:
@@ -47,6 +51,15 @@ func _setup_win_ui() -> void:
 			win_ui.size = screen_size
 			win_ui.position = Vector2.ZERO
 
+func _setup_audio() -> void:
+	if audio_player:
+		# Configure audio to work during pause and with maximum reach
+		audio_player.process_mode = Node.PROCESS_MODE_ALWAYS
+		audio_player.max_distance = 2000.0
+		audio_player.volume_db = win_volume_db
+		if win_sound:
+			audio_player.stream = win_sound
+
 func _on_body_entered(body: Node2D) -> void:
 	if has_triggered:
 		return
@@ -64,11 +77,34 @@ func _trigger_win() -> void:
 	has_triggered = true
 	print("Exit: Player reached the exit - You Win!")
 	
+	# Play win sound FIRST before other operations
+	_play_win_sound()
+	
+	# Small delay to ensure sound starts playing
+	await get_tree().create_timer(0.1).timeout
+	
+	# Fade out background music
+	if BackgroundMusic:
+		BackgroundMusic.fade_out(fade_duration)
+	
 	# Pause the game
 	get_tree().paused = true
 	
 	# Show and fade in the win message
 	_show_win_message()
+
+func _play_win_sound() -> void:
+	if audio_player and win_sound:
+		# Ensure audio continues during pause
+		audio_player.process_mode = Node.PROCESS_MODE_ALWAYS
+		audio_player.stream = win_sound
+		audio_player.volume_db = win_volume_db
+		# Set to maximum distance to ensure it's heard
+		audio_player.max_distance = 2000.0
+		audio_player.play()
+		print("Exit: Playing win sound")
+	else:
+		print("Exit: No win sound or audio player configured")
 
 func _show_win_message() -> void:
 	if not win_ui or not win_label:
@@ -104,7 +140,10 @@ func _unhandled_input(event: InputEvent) -> void:
 	if has_triggered and event.is_action_pressed("ui_accept"):
 		# Restart the game
 		get_tree().paused = false
-		get_tree().reload_current_scene()
+		# Restore background music with a small delay to ensure clean state
+		if BackgroundMusic:
+			BackgroundMusic.call_deferred("restore_background_music")
+		get_tree().call_deferred("reload_current_scene")
 	elif has_triggered and event.is_action_pressed("ui_cancel"):
 		# Quit the game
 		get_tree().quit()

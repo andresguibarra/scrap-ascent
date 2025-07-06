@@ -4,8 +4,12 @@ extends Node2D
 enum DoorState { OPEN, CLOSED, OPENING, CLOSING }
 enum ActivationCondition { ALL, ANY }
 
-@export var animation_duration: float = 1.0
+@export var animation_duration: float = 1.0:
+	set(value):
+		animation_duration = max(0.1, value)  # Minimum 0.1 seconds
+		_on_animation_duration_changed()
 @export var progress_curve: Curve = null
+@export var door_sound: AudioStream
 
 static func _create_default_curve() -> Curve:
 	var curve = Curve.new()
@@ -38,6 +42,7 @@ static func _create_default_curve() -> Curve:
 @onready var door_body: AnimatableBody2D = $MovementPath/PathFollow2D/DoorBody
 @onready var left_marker: Marker2D = $MovementPath/PathFollow2D/LeftMarker
 @onready var right_marker: Marker2D = $MovementPath/PathFollow2D/RightMarker
+@onready var audio_player: AudioStreamPlayer2D = $AudioStreamPlayer2D
 
 var current_state: DoorState = DoorState.CLOSED
 var crushed_objects: Array[CharacterBody2D] = []
@@ -46,6 +51,7 @@ var animation_time: float = 0.0
 var is_animating: bool = false
 var target_progress: float = 0.0
 var start_progress: float = 0.0
+var audio_tween: Tween
 
 func _ready() -> void:
 	# Ensure each instance has its own unique curve
@@ -174,6 +180,7 @@ func open_door() -> void:
 		return
 	
 	current_state = DoorState.OPENING
+	_play_door_sound()
 	_start_animation(1.0)
 
 func close_door() -> void:
@@ -186,6 +193,7 @@ func close_door() -> void:
 	# Clear the crushed objects list when starting to close
 	crushed_objects.clear()
 	current_state = DoorState.CLOSING
+	_play_door_sound()
 	_start_animation(0.0)
 
 func toggle_door() -> void:
@@ -212,6 +220,7 @@ func _start_animation(target: float) -> void:
 	is_animating = true
 
 func _on_animation_complete() -> void:
+	_stop_door_sound()
 	match current_state:
 		DoorState.OPENING:
 			current_state = DoorState.OPEN
@@ -333,3 +342,49 @@ func _update_marker_visibility():
 		left_marker.visible = enable_left_marker
 	if right_marker:
 		right_marker.visible = enable_right_marker
+
+# =============================================================================
+# AUDIO SYSTEM
+# Auto-adjusts to animation_duration changes for perfect synchronization
+# =============================================================================
+func _play_door_sound() -> void:
+	if door_sound and audio_player:
+		# Stop any previous audio tween and reset volume
+		if audio_tween:
+			audio_tween.kill()
+		
+		_reset_audio_volume()
+		
+		# Start playing the sound
+		audio_player.stream = door_sound
+		audio_player.play()
+		
+		# Create a tween that will stop the sound when animation finishes
+		# This automatically uses the current animation_duration value
+		_schedule_audio_stop()
+
+func _schedule_audio_stop() -> void:
+	if audio_tween:
+		audio_tween.kill()
+	
+	# Always use the current animation_duration for precise timing
+	audio_tween = create_tween()
+	audio_tween.tween_callback(_stop_door_sound).set_delay(animation_duration)
+
+func _on_animation_duration_changed() -> void:
+	# If audio is currently playing and we have an active tween, reschedule it
+	# This ensures audio always matches the current animation duration
+	if audio_player and audio_player.playing and audio_tween and audio_tween.is_valid():
+		_schedule_audio_stop()
+
+func _stop_door_sound() -> void:
+	if audio_player and audio_player.playing:
+		# Create a quick fade out for smooth audio ending
+		var fade_tween = create_tween()
+		fade_tween.tween_property(audio_player, "volume_db", -80.0, 0.1)
+		fade_tween.tween_callback(audio_player.stop)
+		fade_tween.tween_callback(_reset_audio_volume)
+
+func _reset_audio_volume() -> void:
+	if audio_player:
+		audio_player.volume_db = 0.0

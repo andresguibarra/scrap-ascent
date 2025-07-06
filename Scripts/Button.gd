@@ -10,16 +10,29 @@ enum Type { BUTTON, LIGHT_RIGHT, LIGHT_LEFT }
 @export var type = Type.BUTTON:
 	set(new_type):
 		type = new_type
+@export var switch_on_sound: AudioStream
+@export var switch_off_sound: AudioStream
+@export var audio_max_distance: float = 700.0:
+	set(value):
+		audio_max_distance = max(50.0, value)  # Minimum 50 pixels
+		_update_audio_settings()
+@export var audio_volume_db: float = -5.0:
+	set(value):
+		audio_volume_db = clamp(value, -80.0, 24.0)  # Valid dB range
+		_update_audio_settings()
 
 @onready var sprite: Sprite2D = $Sprite2D
 @onready var area: Area2D = $Node2D/Area2D
 @onready var light: PointLight2D = $Node2D/PointLight2D
 @onready var node2d: Node2D = $Node2D
+@onready var audio_player: AudioStreamPlayer2D = $AudioStreamPlayer2D
 var is_active: bool = false
 var enemies_on_button: int = 0
 
 func _ready() -> void:
+	add_to_group("buttons")
 	_setup_button()
+	_setup_audio()
 	if not Engine.is_editor_hint():
 		_connect_signals()
 
@@ -52,6 +65,21 @@ func _setup_button() -> void:
 	if light:
 		# Start with light disabled
 		light.enabled = false
+
+func _setup_audio() -> void:
+	if audio_player:
+		# Configure audio range - audible up to specified distance
+		audio_player.max_distance = audio_max_distance
+		# Set attenuation for natural sound falloff
+		audio_player.attenuation = 1.0
+		# Set volume level
+		audio_player.volume_db = audio_volume_db
+
+func _update_audio_settings() -> void:
+	# Update audio settings when variables change (called by setters)
+	if audio_player:
+		audio_player.max_distance = audio_max_distance
+		audio_player.volume_db = audio_volume_db
 
 func _connect_signals() -> void:
 	if area:
@@ -96,6 +124,7 @@ func _activate_button() -> void:
 		light.enabled = true
 		light.energy = 1.2
 		light.color = active_color
+	_play_sound(switch_on_sound)
 	print("Button activated!")
 	activated.emit()
 
@@ -112,6 +141,7 @@ func _activate_permanent_button() -> void:
 		light.enabled = true
 		light.energy = 1.2
 		light.color = active_color
+	_play_sound(switch_on_sound)
 	print("Permanent button activated!")
 	activated.emit()
 
@@ -133,8 +163,14 @@ func _deactivate_button() -> void:
 		sprite.modulate = inactive_color
 	if light:
 		light.enabled = false
+	_play_sound(switch_off_sound)
 	print("Button deactivated!")
 	deactivated.emit()
 
 func get_is_active() -> bool:
 	return is_active
+
+func _play_sound(sound: AudioStream) -> void:
+	if sound and audio_player:
+		audio_player.stream = sound
+		audio_player.play()

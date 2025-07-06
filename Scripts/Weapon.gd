@@ -5,6 +5,10 @@ class_name Weapon
 @export var attract_speed: float = 900.0
 @export var shoot_cooldown: float = 0.3
 @export var knockback_force: float = 120
+@export var gun_get_sound: AudioStream
+@export var shoot_sound_1: AudioStream
+@export var shoot_sound_2: AudioStream
+@export var throw_sound: AudioStream
 
 var is_held: bool = false
 var facing_right: bool = true
@@ -21,6 +25,7 @@ var pickup_cooldown_timer: float = 0.0
 @onready var shoot_point: Marker2D = $ShootPoint
 @onready var sprite: Sprite2D = $Sprite2D
 @onready var pickup_area: Area2D = $PickupArea
+@onready var audio_player: AudioStreamPlayer = $AudioStreamPlayer
 
 # =============================================================================
 # LIFECYCLE
@@ -97,6 +102,7 @@ func shoot() -> bool:
 	
 	_launch_projectile(projectile)
 	_apply_recoil_if_needed()
+	_play_random_shoot_sound()
 	
 	shoot_timer = shoot_cooldown
 	return true
@@ -176,6 +182,7 @@ func drop(throw_direction: Vector2 = Vector2.ZERO) -> void:
 	
 	_apply_throw_physics(throw_direction)
 	_configure_for_dropped_state()
+	_play_throw_sound()
 
 func _reparent_to_scene(restore_position: Vector2) -> bool:
 	if not holder or get_parent() != holder:
@@ -277,6 +284,7 @@ func _configure_for_held_state() -> void:
 	collision_layer = 0
 	collision_mask = 0
 	
+	_play_gun_get_sound()
 	_update_facing_direction()
 	_update_position_relative_to_holder()
 
@@ -307,7 +315,7 @@ func _auto_setup_holder() -> void:
 	holder = parent_node
 	is_held = true
 	
-	_configure_for_held_state()
+	#_configure_for_held_state()
 	_update_flip()
 
 # =============================================================================
@@ -351,5 +359,36 @@ func _check_for_auto_pickup() -> void:
 	# 4. Pickup cooldown has expired
 	# 5. Weapon is not already being attracted
 	if not is_held and holder and holder_in_area and holder_has_left_area and pickup_cooldown_timer <= 0.0 and not is_being_attracted:
-		print("Weapon: Auto-pickup triggered for holder")
 		return_to_holder()
+
+# =============================================================================
+# AUDIO SYSTEM
+# =============================================================================
+func _play_gun_get_sound() -> void:
+	if gun_get_sound and audio_player:
+		audio_player.stream = gun_get_sound
+		audio_player.play()
+
+func _play_random_shoot_sound() -> void:
+	if not audio_player:
+		return
+	
+	var sounds_available: Array[AudioStream] = []
+	
+	# Collect available shoot sounds
+	if shoot_sound_1:
+		sounds_available.append(shoot_sound_1)
+	if shoot_sound_2:
+		sounds_available.append(shoot_sound_2)
+	
+	# Play random sound if any are available
+	if sounds_available.size() > 0:
+		var random_index = randi() % sounds_available.size()
+		var selected_sound = sounds_available[random_index]
+		audio_player.stream = selected_sound
+		audio_player.play()
+
+func _play_throw_sound() -> void:
+	if throw_sound and audio_player:
+		audio_player.stream = throw_sound
+		audio_player.play()

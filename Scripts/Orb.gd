@@ -7,6 +7,8 @@ signal possession_ended
 @export var speed := 200.0
 @export var possession_range := 100.0  # Increased for testing
 @export var attraction_speed := 800.0  # Speed when moving towards enemy for possession
+@export var orb_sound: AudioStream
+@export var possession_sound: AudioStream
 var controlled = true
 var gravity: float = ProjectSettings.get_setting("physics/2d/default_gravity")
 
@@ -30,6 +32,7 @@ var default_velocity_max: float = 20.0
 @onready var line_of_sight: RayCast2D = $LineOfSight
 @onready var particles: GPUParticles2D = $Particles
 @onready var particles_intense: GPUParticles2D = $ParticlesIntense
+@onready var audio_player: AudioStreamPlayer = $AudioStreamPlayer
 
 func _ready() -> void:
 	name = "Orb"
@@ -38,6 +41,7 @@ func _ready() -> void:
 	_setup_light_pulsing()
 	_setup_line_of_sight()
 	_setup_particles()
+	_setup_audio()
 
 func _process(delta: float) -> void:
 	if is_possessing:
@@ -221,6 +225,8 @@ func _unhandled_input(_event: InputEvent) -> void:
 func _attempt_possession() -> void:
 	var enemy := _find_nearest_enemy()
 	if enemy:
+		_play_possession_sound()
+		await get_tree().create_timer(0.2).timeout
 		print("Orb: Starting possession sequence towards enemy")
 		is_possessing = true
 		target_enemy = enemy
@@ -229,6 +235,7 @@ func _attempt_possession() -> void:
 		possession_started.emit()
 	else:
 		print("Orb: No valid enemy found for possession")
+		#_play_orb_sound()  # Play orb sound when possession fails
 
 func _flash_light_on_possession() -> void:
 	if light:
@@ -283,8 +290,11 @@ func _complete_possession() -> void:
 	print("Orb: Possession completed")
 	if target_enemy:
 		_flash_light_on_possession()
+		# Play possession sound before possessing
+		_play_possession_sound()
 		target_enemy.posses()
 	possession_ended.emit()
+	
 	queue_free()
 
 func _setup_line_of_sight() -> void:
@@ -334,3 +344,32 @@ func _has_clear_line_of_sight(enemy: Enemy) -> bool:
 	
 	# If not colliding with anything, there's a clear path
 	return true
+
+# =============================================================================
+# AUDIO SYSTEM
+# =============================================================================
+func _setup_audio() -> void:
+	if audio_player:
+		# Configure orb audio settings
+		#audio_player.stream = sound
+		#audio_player.max_distance = 700.0
+#k		audio_player.attenuation = 1.0
+		#audio_player.volume_db = 0.0  # Full volume for clear audio feedback
+		print("Orb: Audio system initialized")
+	else:
+		print("Orb: Warning - AudioStreamPlayer2D not found!")
+
+func _play_orb_sound() -> void:
+	if orb_sound:
+		_play_sound(orb_sound)
+
+func _play_possession_sound() -> void:
+	if possession_sound:
+		_play_sound(possession_sound)
+
+func _play_sound(sound: AudioStream) -> void:
+	if sound and audio_player:
+		audio_player.stream = sound
+		audio_player.volume_db = 0.0  # Ensure full volume
+		audio_player.play()
+		print("Orb: Playing sound: ", sound.resource_path if sound.resource_path else "Unknown sound")

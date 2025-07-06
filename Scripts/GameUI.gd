@@ -76,4 +76,7 @@ func _handle_restart_input(delta: float) -> void:
 
 func _restart_game() -> void:
 	get_tree().paused = false
-	get_tree().reload_current_scene()
+	# Restore background music with a small delay to ensure clean state
+	if BackgroundMusic:
+		BackgroundMusic.call_deferred("restore_background_music")
+	get_tree().call_deferred("reload_current_scene")

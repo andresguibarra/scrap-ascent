@@ -1,13 +1,14 @@
-[gd_scene load_steps=7 format=3 uid="uid://b6q3wfgv2mrcw"]
+[gd_scene load_steps=8 format=3 uid="uid://b6q3wfgv2mrcw"]
 
 [ext_resource type="Script" uid="uid://b6tq7aatr8uc3" path="res://Scripts/Door.gd" id="1_38ogf"]
 [ext_resource type="Texture2D" uid="uid://cf7x7i3r8nwi6" path="res://Assets/MetallicDoor.png" id="2_mw28t"]
+[ext_resource type="AudioStream" uid="uid://bxvkg15quebm" path="res://Assets/Sounds/metalSlidingDoor.wav" id="3_door_sound"]
 
 [sub_resource type="Curve" id="Curve_mw28t"]
 _data = [Vector2(0, 0), 0.0, 2.0, 0, 0, Vector2(1, 1), 2.0, 0.0, 0, 0]
 point_count = 2
 
-[sub_resource type="Curve2D" id="Curve2D_mw28t"]
+[sub_resource type="Curve2D" id="Curve2D_7mbvs"]
 _data = {
 "points": PackedVector2Array(0, 0, 0, 0, 0, -8, 0, 0, 0, 0, 0, 8)
 }
@@ -22,9 +23,10 @@ size = Vector2(14, 18)
 [node name="Door" type="Node2D"]
 script = ExtResource("1_38ogf")
 progress_curve = SubResource("Curve_mw28t")
+door_sound = ExtResource("3_door_sound")
 
 [node name="MovementPath" type="Path2D" parent="."]
-curve = SubResource("Curve2D_mw28t")
+curve = SubResource("Curve2D_7mbvs")
 
 [node name="PathFollow2D" type="PathFollow2D" parent="MovementPath"]
 position = Vector2(0, -8)
@@ -60,3 +62,5 @@ collision_mask = 4
 position = Vector2(1.39554e-05, 0)
 shape = SubResource("RectangleShape2D_crush_detect")
 debug_color = Color(0.429359, 0.485619, 0.920063, 0.42)
+
+[node name="AudioStreamPlayer2D" type="AudioStreamPlayer2D" parent="."]

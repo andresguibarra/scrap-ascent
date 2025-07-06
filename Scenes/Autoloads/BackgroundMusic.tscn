@@ -1,0 +1,9 @@
+[gd_scene load_steps=3 format=3 uid="uid://bkj8q2h8xvf7e"]
+
+[ext_resource type="Script" uid="uid://djfdfejd44c6g" path="res://Scripts/Autoloads/BackgroundMusic.gd" id="1_bg_music"]
+[ext_resource type="AudioStream" uid="uid://ykre3su3xqx" path="res://Assets/Sounds/05 gaseous tethanus.ogg" id="2_tphe2"]
+
+[node name="BackgroundMusic" type="AudioStreamPlayer"]
+volume_db = -10.0
+script = ExtResource("1_bg_music")
+background_music = ExtResource("2_tphe2")

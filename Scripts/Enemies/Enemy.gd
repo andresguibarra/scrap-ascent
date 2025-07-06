@@ -52,6 +52,14 @@ var skills = {
 # State colors
 @export var inert_color: Color = Color(0.3, 0.3, 0.3, 1.0)      # Gray
 
+# Audio
+@export var jump_sound: AudioStream
+@export var double_jump_sound: AudioStream
+@export var dash_sound: AudioStream
+@export var release_sound: AudioStream
+@export var destroy_sound: AudioStream
+@export var wall_slide_sound: AudioStream
+
 var gravity: float = ProjectSettings.get_setting("physics/2d/default_gravity")
 
 var chip_destroyed: bool = false
@@ -61,6 +69,7 @@ var dash_timer: float = 0.0
 # Wall climbing state
 var is_wall_sliding: bool = false
 var wall_normal: Vector2 = Vector2.ZERO
+var wall_slide_sound_played: bool = false
 
 # Jump and dash tracking
 var jumps_remaining: int = 0
@@ -98,6 +107,7 @@ var last_input_direction: float = 0.0
 @onready var eyes_sprite: AnimatedSprite2D = $Eyes
 @onready var light: PointLight2D = $PointLight2D
 @onready var damage_particles: GPUParticles2D = $DamageParticles
+@onready var audio_player: AudioStreamPlayer = $AudioStreamPlayer
 
 func _ready() -> void:
 	if Engine.is_editor_hint():
@@ -336,7 +346,9 @@ func _update_physics(delta: float) -> void:
 func _update_wall_sliding() -> void:
 	var tier_skills = skills.get(tier, [Skill.MOVE, Skill.JUMP])
 	if Skill.WALL_CLIMB not in tier_skills or current_state != State.CONTROLLED:
-		is_wall_sliding = false
+		if is_wall_sliding:
+			is_wall_sliding = false
+			wall_slide_sound_played = false
 		return
 	
 	# Simple wall slide - if on wall, falling, and moving towards wall
@@ -347,18 +359,28 @@ func _update_wall_sliding() -> void:
 		
 		# Check if this is the same wall we just wall jumped from
 		if _is_same_wall_as_last_jump(current_wall_normal):
-			is_wall_sliding = false
+			if is_wall_sliding:
+				is_wall_sliding = false
+				wall_slide_sound_played = false
 			return
 		
 		if moving_towards_wall:
-			is_wall_sliding = true
-			wall_normal = current_wall_normal
+			# Start wall sliding
+			if not is_wall_sliding:
+				is_wall_sliding = true
+				wall_normal = current_wall_normal
+				_play_wall_slide_sound()
+				wall_slide_sound_played = true
 			if jumps_remaining == 0:
 				jumps_remaining = 1
 		else:
-			is_wall_sliding = false
+			if is_wall_sliding:
+				is_wall_sliding = false
+				wall_slide_sound_played = false
 	else:
-		is_wall_sliding = false
+		if is_wall_sliding:
+			is_wall_sliding = false
+			wall_slide_sound_played = false
 
 func _handle_state_logic() -> void:
 	match current_state:
@@ -477,11 +499,17 @@ func _apply_jump(jump_input: bool) -> void:
 func _execute_jump() -> void:
 	velocity.y = jump_velocity
 	jumps_remaining -= 1
+	
+	# Play appropriate jump sound
+	_play_jump_sound()
 
 func _execute_simple_wall_jump() -> void:
 	# Simple wall jump - only vertical velocity, player controls horizontal
 	velocity.y = jump_velocity  # Use same jump velocity as normal jumps
 	jumps_remaining -= 1
+	
+	# Play appropriate jump sound
+	_play_jump_sound()
 	
 	# Set cooldown for this wall
 	var wall_direction = get_wall_normal()
@@ -493,6 +521,9 @@ func _execute_wall_coyote_jump() -> void:
 	velocity.y = jump_velocity  # Use same jump velocity as normal jumps
 	jumps_remaining -= 1
 	wall_coyote_timer = 0.0  # Used the coyote time
+	
+	# Play appropriate jump sound
+	_play_jump_sound()
 	
 	# Set cooldown for this wall
 	wall_jump_cooldown = wall_jump_cooldown_time
@@ -513,6 +544,7 @@ func _perform_dash(direction: float) -> void:
 	velocity.x = direction * dash_speed
 	velocity.y = 0
 	_flip_to_direction(direction)
+	_play_dash_sound()
 
 func _check_dash_collision() -> void:
 	if is_dashing and is_on_wall():
@@ -526,12 +558,17 @@ func _flip_to_direction(dir: float) -> void:
 		animated_sprite.flip_h = false  # Facing left (don't flip, sprites face left by default)
 
 func _release_control() -> void:
+	# Play release sound first and wait a bit to ensure it starts
+	_play_release_sound()
+	#await get_tree().create_timer(0.1).timeout
+	
 	# Store current velocity to preserve momentum
 	var current_velocity := velocity
 	
 	# Stop wall sliding when releasing control
 	is_wall_sliding = false
 	wall_normal = Vector2.ZERO
+	wall_slide_sound_played = false
 	
 	# Reset state based on chip status
 	if chip_destroyed:
@@ -631,6 +668,7 @@ func destroy_chip() -> void:
 		current_state = State.INERT
 		_update_visual_state()
 		_generate_damage_particles()
+		_play_destroy_sound()
 
 func _update_visual_state() -> void:
 	match current_state:
@@ -826,3 +864,52 @@ func _generate_damage_particles() -> void:
 	# Trigger the particle burst
 	damage_particles.restart()
 	damage_particles.emitting = true
+
+# =============================================================================
+# AUDIO SYSTEM
+# =============================================================================
+func _play_jump_sound() -> void:
+	if not audio_player:
+		return
+	
+	# Determine if this is a double jump
+	# If we have double jump skill and jumps_remaining is less than max_jumps-1, it's a double jump
+	var tier_skills = skills.get(tier, [Skill.MOVE, Skill.JUMP])
+	var is_double_jump = false
+	
+	if Skill.DOUBLE_JUMP in tier_skills:
+		# If we have double jump and just used our second jump (jumps_remaining went from 1 to 0)
+		is_double_jump = (jumps_remaining == 0 and max_jumps == 2)
+	
+	# Play appropriate sound
+	var sound_to_play: AudioStream = null
+	if is_double_jump and double_jump_sound:
+		sound_to_play = double_jump_sound
+	elif jump_sound:
+		sound_to_play = jump_sound
+	
+	if sound_to_play:
+		audio_player.stream = sound_to_play
+		audio_player.play()
+
+func _play_destroy_sound() -> void:
+	if destroy_sound and audio_player:
+		audio_player.stream = destroy_sound
+		audio_player.play()
+
+func _play_wall_slide_sound() -> void:
+	if wall_slide_sound and audio_player:
+		audio_player.stream = wall_slide_sound
+		audio_player.play()
+
+func _play_dash_sound() -> void:
+	if dash_sound and audio_player:
+		audio_player.stream = dash_sound
+		audio_player.play()
+
+func _play_release_sound() -> void:
+	if release_sound and audio_player:
+		audio_player.stream = release_sound
+		audio_player.volume_db = -15.0  # Ensure full volume
+		audio_player.play()
+		print("Enemy: Playing release control sound")

@@ -1,8 +1,13 @@
-[gd_scene load_steps=25 format=3 uid="uid://br3eqxxhw6lmw"]
+[gd_scene load_steps=30 format=3 uid="uid://br3eqxxhw6lmw"]
 
 [ext_resource type="Script" uid="uid://cri6ele7qliv2" path="res://Scripts/Enemies/Enemy.gd" id="1_3h0b7"]
+[ext_resource type="AudioStream" uid="uid://pe63owraoa3h" path="res://Assets/Sounds/aJump.ogg" id="2_35yb6"]
 [ext_resource type="Texture2D" uid="uid://dd64sgkax14bn" path="res://Assets/RobotScrapAscent.png" id="2_s7ep0"]
+[ext_resource type="AudioStream" uid="uid://db8qn1eqsjg3h" path="res://Assets/Sounds/aJumpB.ogg" id="3_468r6"]
 [ext_resource type="Texture2D" uid="uid://cmkyr5sv7hj2m" path="res://Assets/light.png" id="3_light"]
+[ext_resource type="AudioStream" uid="uid://dhntshybqktsm" path="res://Assets/Sounds/dash.wav" id="4_0fmw3"]
+[ext_resource type="AudioStream" uid="uid://3unt5bst0g2p" path="res://Assets/Sounds/aShotDie.ogg" id="4_destroy"]
+[ext_resource type="AudioStream" uid="uid://cck8l3t147lsw" path="res://Assets/Sounds/releaseControl.wav" id="5_n01f6"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_1"]
 size = Vector2(15, 16)
@@ -214,6 +219,12 @@ collision_layer = 4
 collision_mask = 65
 script = ExtResource("1_3h0b7")
 ai_speed = 80.0
+jump_sound = ExtResource("2_35yb6")
+double_jump_sound = ExtResource("3_468r6")
+dash_sound = ExtResource("4_0fmw3")
+release_sound = ExtResource("5_n01f6")
+destroy_sound = ExtResource("4_destroy")
+wall_slide_sound = ExtResource("3_468r6")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 position = Vector2(-0.5, 0)
@@ -255,3 +266,5 @@ animation = &"WallSlide"
 
 [node name="HandMarker" type="Node2D" parent="."]
 position = Vector2(6, 2)
+
+[node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="."]

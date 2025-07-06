@@ -1,8 +1,9 @@
-[gd_scene load_steps=6 format=3 uid="uid://b760qg272jrae"]
+[gd_scene load_steps=7 format=3 uid="uid://b760qg272jrae"]
 
 [ext_resource type="Script" uid="uid://fwtclg7wp2na" path="res://Scripts/Exit.gd" id="1_exit"]
 [ext_resource type="FontFile" uid="uid://cthmkbd4ye2lx" path="res://Assets/QuinqueFive.ttf" id="2_font"]
 [ext_resource type="Texture2D" uid="uid://cmkyr5sv7hj2m" path="res://Assets/light.png" id="2_vclj6"]
+[ext_resource type="AudioStream" uid="uid://d8cv3b852fcm" path="res://Assets/Sounds/1x level win.ogg" id="4_win_sound"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_exit"]
 size = Vector2(48, 16)
@@ -15,6 +16,7 @@ default_font_size = 16
 collision_layer = 0
 collision_mask = 6
 script = ExtResource("1_exit")
+win_sound = ExtResource("4_win_sound")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("RectangleShape2D_exit")
@@ -55,3 +57,7 @@ text = "You found the exit!"
 horizontal_alignment = 1
 vertical_alignment = 1
 metadata/_edit_lock_ = true
+
+[node name="AudioStreamPlayer2D" type="AudioStreamPlayer2D" parent="."]
+stream = ExtResource("4_win_sound")
+max_distance = 1000.0
