@@ -3,6 +3,7 @@ name: Deploy to GitHub Pages
 on:
   push:
     branches: [ master, main ]
+  workflow_dispatch:
 
 env:
   GODOT_VERSION: 4.3
@@ -42,11 +43,11 @@ jobs:
           mkdir -v -p build/web
           godot --headless --verbose --export-release "Web" build/web/index.html
       
-      - name: Fix Cross-Origin Headers
+      - name: Add coi-serviceworker
         run: |
-          cd build/web
-          echo 'Cross-Origin-Embedder-Policy: require-corp' >> _headers
-          echo 'Cross-Origin-Opener-Policy: same-origin' >> _headers
+          git clone https://github.com/gzuidhof/coi-serviceworker.git
+          mv coi-serviceworker/coi-serviceworker.js build/web/coi-serviceworker.js
+          sed -i '3 i <script src="coi-serviceworker.js"></script>' build/web/index.html
       
       - name: Upload Pages Artifact
         uses: actions/upload-pages-artifact@v3
