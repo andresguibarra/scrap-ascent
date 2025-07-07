@@ -51,6 +51,7 @@ release_sound = null
 position = Vector2(284, 354)
 tier = 4
 has_weapon = true
+face_right = true
 release_sound = null
 
 [node name="Camera2D" type="Camera2D" parent="."]

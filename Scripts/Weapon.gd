@@ -156,10 +156,6 @@ func _update_facing_direction() -> void:
 	if holder.has_method("get_facing_direction"):
 		var holder_direction: float = holder.get_facing_direction()
 		facing_right = holder_direction > 0
-	else:
-		var holder_sprite = holder.sprite
-		if holder_sprite:
-			facing_right = not holder_sprite.flip_h
 
 func _update_flip() -> void:
 	sprite.flip_h = not facing_right

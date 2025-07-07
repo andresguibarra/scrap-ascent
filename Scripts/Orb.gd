@@ -292,7 +292,7 @@ func _complete_possession() -> void:
 		_flash_light_on_possession()
 		# Play possession sound before possessing
 		_play_possession_sound()
-		target_enemy.posses()
+		target_enemy.possess()
 	possession_ended.emit()
 	
 	queue_free()

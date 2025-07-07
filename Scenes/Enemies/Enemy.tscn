@@ -1,4 +1,4 @@
-[gd_scene load_steps=30 format=3 uid="uid://br3eqxxhw6lmw"]
+[gd_scene load_steps=44 format=3 uid="uid://br3eqxxhw6lmw"]
 
 [ext_resource type="Script" uid="uid://cri6ele7qliv2" path="res://Scripts/Enemies/Enemy.gd" id="1_3h0b7"]
 [ext_resource type="AudioStream" uid="uid://pe63owraoa3h" path="res://Assets/Sounds/aJump.ogg" id="2_35yb6"]
@@ -8,6 +8,20 @@
 [ext_resource type="AudioStream" uid="uid://dhntshybqktsm" path="res://Assets/Sounds/dash.wav" id="4_0fmw3"]
 [ext_resource type="AudioStream" uid="uid://3unt5bst0g2p" path="res://Assets/Sounds/aShotDie.ogg" id="4_destroy"]
 [ext_resource type="AudioStream" uid="uid://cck8l3t147lsw" path="res://Assets/Sounds/releaseControl.wav" id="5_n01f6"]
+[ext_resource type="Script" uid="uid://by1sn2gmrpusu" path="res://Scripts/StateMachine/StateMachine.gd" id="5_statemachine"]
+[ext_resource type="Script" uid="uid://drqpeqvv3u05r" path="res://Scripts/StateMachine/EnemyStates/AIIdleState.gd" id="6_ai_idle"]
+[ext_resource type="Script" uid="uid://crlve862h8gpd" path="res://Scripts/StateMachine/EnemyStates/AIMoveState.gd" id="7_ai_move"]
+[ext_resource type="Script" uid="uid://dygtec7huyblg" path="res://Scripts/StateMachine/EnemyStates/AIJumpState.gd" id="8_ai_jump"]
+[ext_resource type="Script" uid="uid://nmmcxdnrm0h6" path="res://Scripts/StateMachine/EnemyStates/AIFallState.gd" id="9_ai_fall"]
+[ext_resource type="Script" uid="uid://c4wkqlulytmr7" path="res://Scripts/StateMachine/EnemyStates/ControlledIdleState.gd" id="10_ctrl_idle"]
+[ext_resource type="Script" uid="uid://c0s78gypxkfse" path="res://Scripts/StateMachine/EnemyStates/ControlledMoveState.gd" id="11_ctrl_move"]
+[ext_resource type="Script" uid="uid://dh2ttyaj6mqey" path="res://Scripts/StateMachine/EnemyStates/ControlledDoubleJumpState.gd" id="12_ctrl_double_jump"]
+[ext_resource type="Script" uid="uid://bwf0ujxyu5o4c" path="res://Scripts/StateMachine/EnemyStates/ControlledJumpState.gd" id="12_ctrl_jump"]
+[ext_resource type="Script" uid="uid://c6pg2s54ncs5a" path="res://Scripts/StateMachine/EnemyStates/ControlledFallState.gd" id="13_ctrl_fall"]
+[ext_resource type="Script" uid="uid://csu65bkxwqutl" path="res://Scripts/StateMachine/EnemyStates/ControlledDashState.gd" id="14_ctrl_dash"]
+[ext_resource type="Script" uid="uid://bdme5q3pxn0ex" path="res://Scripts/StateMachine/EnemyStates/ControlledWallSlideState.gd" id="15_ctrl_wall"]
+[ext_resource type="Script" uid="uid://slc0he27uefc" path="res://Scripts/StateMachine/EnemyStates/InertIdleState.gd" id="16_inert_idle"]
+[ext_resource type="Script" uid="uid://c0p7dltt7isdf" path="res://Scripts/StateMachine/EnemyStates/InertFallState.gd" id="17_inert_fall"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_1"]
 size = Vector2(15, 16)
@@ -218,7 +232,6 @@ animations = [{
 collision_layer = 4
 collision_mask = 65
 script = ExtResource("1_3h0b7")
-ai_speed = 80.0
 jump_sound = ExtResource("2_35yb6")
 double_jump_sound = ExtResource("3_468r6")
 dash_sound = ExtResource("4_0fmw3")
@@ -233,7 +246,7 @@ shape = SubResource("RectangleShape2D_1")
 target_position = Vector2(15, 15)
 
 [node name="WallRayCast2D" type="RayCast2D" parent="."]
-target_position = Vector2(8, 0)
+target_position = Vector2(15, 0)
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
 modulate = Color(0.8, 0.4, 0.4, 1)
@@ -267,3 +280,46 @@ animation = &"WallSlide"
 position = Vector2(6, 2)
 
 [node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="."]
+
+[node name="StateMachine" type="Node" parent="." node_paths=PackedStringArray("initial_state")]
+script = ExtResource("5_statemachine")
+initial_state = NodePath("AIMoveState")
+
+[node name="AIIdleState" type="Node" parent="StateMachine"]
+script = ExtResource("6_ai_idle")
+
+[node name="AIMoveState" type="Node" parent="StateMachine"]
+script = ExtResource("7_ai_move")
+
+[node name="AIJumpState" type="Node" parent="StateMachine"]
+script = ExtResource("8_ai_jump")
+
+[node name="AIFallState" type="Node" parent="StateMachine"]
+script = ExtResource("9_ai_fall")
+
+[node name="ControlledIdleState" type="Node" parent="StateMachine"]
+script = ExtResource("10_ctrl_idle")
+
+[node name="ControlledMoveState" type="Node" parent="StateMachine"]
+script = ExtResource("11_ctrl_move")
+
+[node name="ControlledJumpState" type="Node" parent="StateMachine"]
+script = ExtResource("12_ctrl_jump")
+
+[node name="ControlledDoubleJumpState" type="Node" parent="StateMachine"]
+script = ExtResource("12_ctrl_double_jump")
+
+[node name="ControlledFallState" type="Node" parent="StateMachine"]
+script = ExtResource("13_ctrl_fall")
+
+[node name="ControlledDashState" type="Node" parent="StateMachine"]
+script = ExtResource("14_ctrl_dash")
+
+[node name="ControlledWallSlideState" type="Node" parent="StateMachine"]
+script = ExtResource("15_ctrl_wall")
+
+[node name="InertIdleState" type="Node" parent="StateMachine"]
+script = ExtResource("16_inert_idle")
+
+[node name="InertFallState" type="Node" parent="StateMachine"]
+script = ExtResource("17_inert_fall")
