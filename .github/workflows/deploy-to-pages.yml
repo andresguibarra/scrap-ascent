@@ -42,12 +42,22 @@ jobs:
         run: |
           mkdir -v -p build/web
           godot --headless --verbose --export-release "Web" build/web/index.html
-      
+          
+      - name: List build output
+        run: |
+          echo "Build directory contents:"
+          ls -la build/web/
+          
       - name: Add coi-serviceworker
         run: |
           git clone https://github.com/gzuidhof/coi-serviceworker.git
-          mv coi-serviceworker/coi-serviceworker.js build/web/coi-serviceworker.js
-          sed -i '3 i <script src="coi-serviceworker.js"></script>' build/web/index.html
+          cp coi-serviceworker/coi-serviceworker.js build/web/
+          sed -i '/<script src="index.js"><\/script>/i <script src="coi-serviceworker.js"></script>' build/web/index.html
+          
+      - name: Verify index.html
+        run: |
+          echo "Contents of index.html:"
+          head -20 build/web/index.html
       
       - name: Upload Pages Artifact
         uses: actions/upload-pages-artifact@v3
