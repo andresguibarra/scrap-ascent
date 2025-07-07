@@ -43,14 +43,14 @@ func _update_position_to_camera() -> void:
 		size = visible_size
 
 func _handle_restart_input(delta: float) -> void:
-	# Check if game is paused (win condition) - then R works instantly
+	# Check if game is paused (win condition) - only R works instantly
 	if get_tree().paused:
-		if Input.is_action_just_pressed("ui_select") or Input.is_key_pressed(KEY_R):
+		if InputManager.is_only_restart_input_active():
 			_restart_game()
 		return
 	
 	# Normal gameplay - hold R for 3 seconds
-	var r_pressed = Input.is_key_pressed(KEY_R)
+	var r_pressed = InputManager.is_restart_pressed()
 	
 	if r_pressed:
 		if not is_holding_restart:
