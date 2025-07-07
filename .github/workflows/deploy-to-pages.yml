@@ -40,8 +40,7 @@ jobs:
       - name: Web Build
         run: |
           mkdir -v -p build/web
-          cd $PROJECT_PATH
-          godot --headless --verbose --export-release "Web" ../build/web/index.html
+          godot --headless --verbose --export-release "Web" build/web/index.html
       
       - name: Fix Cross-Origin Headers
         run: |
