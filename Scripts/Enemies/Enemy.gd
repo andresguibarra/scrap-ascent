@@ -79,6 +79,14 @@ var previous_main_state: Enemy.State = Enemy.State.AI  # Para recordar el estado
 var has_used_double_jump: bool = false  # Para rastrear si ya usó double jump en el aire actual
 var has_used_dash: bool = false  # Para rastrear si ya usó double jump en el aire actual
 
+# Wall jump cooldown tracking
+var wall_jump_cooldown: float = 0.0
+var last_wall_jump_normal: Vector2 = Vector2.ZERO
+
+# Jump buffer for coyote-like behavior
+var jump_buffer_timer: float = 0.0
+var jump_buffer_time: float = 0.3  # Reduced from 0.3 to 0.15 for better balance
+
 # Node references
 @onready var edge_raycast: RayCast2D = $EdgeRayCast2D
 @onready var wall_raycast: RayCast2D = $WallRayCast2D
@@ -113,6 +121,20 @@ func _ready() -> void:
 func _process(_delta: float) -> void:
 	if Engine.is_editor_hint():
 		return
+
+func _physics_process(delta: float) -> void:
+	if Engine.is_editor_hint():
+		return
+	
+	# Update wall jump cooldown timer
+	if wall_jump_cooldown > 0.0:
+		wall_jump_cooldown -= delta
+	# Update jump buffer timer
+	if jump_buffer_timer > 0.0:
+		jump_buffer_timer -= delta
+	# Reset wall jump cooldown when touching ground
+	if is_on_floor():
+		wall_jump_cooldown = 0.0
 
 # CONFIGURATION METHODS
 func _setup_tier_configuration() -> void:
@@ -217,7 +239,58 @@ func use_double_jump() -> void:
 	has_used_double_jump = true
 
 func can_wall_jump() -> bool:
-	return has_skill(Skill.WALL_CLIMB)
+	if not has_skill(Skill.WALL_CLIMB):
+		return false
+	
+	# Check if we're in cooldown for the current wall
+	if is_against_wall():
+		var current_wall_normal = get_current_wall_normal()
+		var is_same_wall = is_same_wall_as_last_jump(current_wall_normal)
+		
+		# STRICT LOGIC: Only allow wall jump if:
+		# 1. It's a different wall, OR
+		# 2. We never wall jumped before (first time)
+		# NO retry on same wall after cooldown - prevents climbing
+		var can_jump = not is_same_wall or last_wall_jump_normal == Vector2.ZERO
+		
+		return can_jump
+	
+	return true
+
+func set_wall_jump_cooldown() -> void:
+	wall_jump_cooldown = wall_jump_cooldown_time
+	last_wall_jump_normal = get_current_wall_normal()
+
+func reset_wall_jump_cooldown() -> void:
+	wall_jump_cooldown = 0.0
+	last_wall_jump_normal = Vector2.ZERO  # Reset the last wall reference too
+
+func get_current_wall_normal() -> Vector2:
+	if not wall_raycast:
+		return Vector2.ZERO
+	
+	var direction = 1.0 if face_right else -1.0
+	wall_raycast.target_position = Vector2(20 * direction, 0)
+	wall_raycast.force_raycast_update()
+	
+	if wall_raycast.is_colliding():
+		var normal = wall_raycast.get_collision_normal()
+		return normal
+	
+	return Vector2.ZERO
+
+func is_same_wall_as_last_jump(wall_normal_to_check: Vector2) -> bool:
+	# If we don't have a valid last wall normal, it's a different wall
+	if last_wall_jump_normal == Vector2.ZERO:
+		return false
+	
+	# If current wall normal is invalid, assume different wall
+	if wall_normal_to_check == Vector2.ZERO:
+		return false
+	
+	var dot_product = wall_normal_to_check.dot(last_wall_jump_normal)
+	var same_wall = dot_product > 0.9
+	return same_wall
 
 # PUBLIC METHODS FOR STATES (called by FSM states)
 func apply_movement_and_gravity(delta: float) -> void:
@@ -378,7 +451,7 @@ func is_against_wall() -> bool:
 		return false
 		
 	var direction = 1.0 if face_right else -1.0
-	wall_raycast.target_position = Vector2(15 * direction, 0)
+	wall_raycast.target_position = Vector2(20 * direction, 0)
 	wall_raycast.force_raycast_update()
 	return wall_raycast.is_colliding()
 
@@ -400,3 +473,12 @@ func create_release_orb() -> void:
 	new_orb.global_position = global_position
 	
 	get_tree().current_scene.add_child(new_orb)
+
+func set_jump_buffer() -> void:
+	jump_buffer_timer = jump_buffer_time
+
+func has_jump_buffer() -> bool:
+	return jump_buffer_timer > 0.0
+
+func consume_jump_buffer() -> void:
+	jump_buffer_timer = 0.0

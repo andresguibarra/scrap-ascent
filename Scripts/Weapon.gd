@@ -339,7 +339,6 @@ func _on_pickup_area_entered(_area: Area2D) -> void:
 func _on_pickup_body_entered(body: Node2D) -> void:
 	if body == holder:
 		holder_in_area = true
-		print("Weapon: Holder entered pickup area")
 
 func _on_pickup_body_exited(body: Node2D) -> void:
 	if body == holder:

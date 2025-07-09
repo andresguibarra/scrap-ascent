@@ -3,6 +3,12 @@ extends "res://Scripts/StateMachine/EnemyStates/EnemyState.gd"
 func enter(_previous_state_path: String, _data := {}) -> void:
 	enemy.set_animation("Idle")
 	enemy.reset_air_abilities()  # Reset air abilities when landing
+	enemy.reset_wall_jump_cooldown()  # Reset wall jump cooldown when landing
+	
+	# Check if we have a buffered jump
+	if enemy.has_jump_buffer():
+		finished.emit(CONTROLLED_JUMP)
+		return
 
 func handle_input(_event: InputEvent) -> void:
 	if enemy.is_controlled() and InputManager.is_possess_just_pressed():
@@ -37,6 +43,12 @@ func physics_update(delta: float) -> void:
 	
 	apply_gravity_and_movement(delta)
 	
-	var movement_transition = check_movement_transitions()
-	if movement_transition != "":
-		finished.emit(movement_transition)
+	# Check for transitions based on movement and physics
+	if not enemy.is_on_floor():
+		finished.emit(CONTROLLED_FALL)
+		return
+	
+	# Transition to move if we have significant velocity (from external forces)
+	if abs(enemy.velocity.x) > 10:
+		finished.emit(CONTROLLED_MOVE)
+		return

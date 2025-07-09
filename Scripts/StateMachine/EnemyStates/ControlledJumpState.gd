@@ -5,6 +5,9 @@ func enter(_previous_state_path: String, _data := {}) -> void:
 		enemy.velocity.y = enemy.jump_velocity
 		enemy.play_sound(enemy.jump_sound)
 		enemy.set_animation("Jump")
+		enemy.set_wall_jump_cooldown()
+		# Consume the jump buffer when we actually jump
+		enemy.consume_jump_buffer()
 
 func handle_input(_event: InputEvent) -> void:
 	if enemy.is_controlled() and InputManager.is_possess_just_pressed():
@@ -15,6 +18,8 @@ func physics_update(delta: float) -> void:
 	var jump: bool = InputManager.is_jump_just_pressed()
 	var dash: bool = InputManager.is_dash_just_pressed()
 	
+	if enemy.wall_jump_cooldown > 0.0:
+		enemy.wall_jump_cooldown -= delta
 	# Handle horizontal movement
 	if direction.x != 0:
 		enemy.velocity.x = direction.x * enemy.ai_speed
@@ -32,8 +37,18 @@ func physics_update(delta: float) -> void:
 		finished.emit(CONTROLLED_DASH)
 		return
 	
+	# Check for transitions based on movement and physics
+	#if enemy.is_on_floor():
+		#if abs(enemy.velocity.x) > 5:
+			#finished.emit(CONTROLLED_MOVE)
+		#else:
+			#finished.emit(CONTROLLED_IDLE)
+		#return
+	
+	# Transition to fall when moving downward
+	if enemy.velocity.y >= -50:
+		finished.emit(CONTROLLED_FALL)
+		return
+	
 	apply_gravity_and_movement(delta)
 	
-	var movement_transition = check_movement_transitions()
-	if movement_transition != "":
-		finished.emit(movement_transition)

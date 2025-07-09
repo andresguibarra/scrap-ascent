@@ -14,6 +14,7 @@ const CONTROLLED_DOUBLE_JUMP = "ControlledDoubleJumpState"
 const CONTROLLED_FALL = "ControlledFallState"
 const CONTROLLED_DASH = "ControlledDashState"
 const CONTROLLED_WALL_SLIDE = "ControlledWallSlideState"
+const CONTROLLED_JUST_LEFT_WALL_SLIDE = "ControlledJustLeftWallSlideState"
 
 const INERT_IDLE = "InertIdleState"
 const INERT_FALL = "InertFallState"
@@ -79,22 +80,6 @@ func check_movement_transitions() -> String:
 				return AI_JUMP
 			elif enemy.velocity.y >= -50 and current_name != "AIFallState":
 				return AI_FALL
-	
-	# For CONTROLLED states
-	elif current_name.begins_with("Controlled"):
-		#pass
-		if enemy.is_on_floor():
-			if abs(enemy.velocity.x) > 5 and current_name != "ControlledMoveState":
-				return CONTROLLED_MOVE
-			elif abs(enemy.velocity.x) <= 5 and current_name != "ControlledIdleState":
-				return CONTROLLED_IDLE
-		else:
-			if enemy.velocity.y < -50:
-				if current_name != "ControlledJumpState" and current_name != "ControlledDoubleJumpState":
-					return CONTROLLED_JUMP
-			elif enemy.velocity.y >= -50 and current_name != "ControlledFallState":
-				return CONTROLLED_FALL
-	
 	# For INERT states
 	elif current_name.begins_with("Inert"):
 		if enemy.is_on_floor():

@@ -46,12 +46,74 @@ func _transition_to_next_state(target_state_path: String, data: Dictionary = {})
 		return
 	
 	var previous_state_path: String = state.name
-	print("StateMachine: Transitioning from ", previous_state_path, " to ", target_state_path)
+	var from_display = _format_state_name(previous_state_path)
+	var to_display = _format_state_name(target_state_path)
+	print_rich("[color=cyan]🔄 StateMachine:[/color] [color=yellow]%s[/color] → [color=yellow]%s[/color]" % [from_display, to_display])
 	
 	state.exit()
 	state = get_node(target_state_path)
 	state.enter(previous_state_path, data)
 	state_changed.emit()
+
+func _format_state_name(state_name: String) -> String:
+	# Remove "State" suffix if present
+	var clean_name = state_name.replace("State", "")
+	
+	# Handle different state types with emojis and colors
+	if clean_name.begins_with("Controlled"):
+		var action = clean_name.replace("Controlled", "")
+		return _get_controlled_state_display(action)
+	elif clean_name.begins_with("AI"):
+		var action = clean_name.replace("AI", "")
+		return _get_ai_state_display(action)
+	elif clean_name.begins_with("Inert"):
+		var action = clean_name.replace("Inert", "")
+		return _get_inert_state_display(action)
+	else:
+		return "[color=white]❓ %s[/color]" % clean_name
+
+func _get_controlled_state_display(action: String) -> String:
+	match action:
+		"Idle":
+			return "[color=gray]🪨 Idle[/color]"
+		"Move":
+			return "[color=yellow]🏃 Move[/color]"
+		"Jump":
+			return "[color=lime]⬆️ Jump[/color]"
+		"DoubleJump":
+			return "[color=lime]⬆️⬆️ DoubleJump[/color]"
+		"Fall":
+			return "[color=gray]⬇️ Fall[/color]"
+		"Dash":
+			return "[color=lightblue]💨 Dash[/color]"
+		"WallSlide":
+			return "[color=orange]🧗 WallSlide[/color]"
+		"JustLeftWallSlide":
+			return "[color=orange]🕐 JustLeftWallSlide[/color]"
+		_:
+			return "[color=lime]🎮 %s[/color]" % action
+
+func _get_ai_state_display(action: String) -> String:
+	match action:
+		"Idle":
+			return "[color=orange]🤖 Idle[/color]"
+		"Move":
+			return "[color=orange]🤖 Move[/color]"
+		"Jump":
+			return "[color=orange]🤖 Jump[/color]"
+		"Fall":
+			return "[color=orange]🤖 Fall[/color]"
+		_:
+			return "[color=orange]🤖 %s[/color]" % action
+
+func _get_inert_state_display(action: String) -> String:
+	match action:
+		"Idle":
+			return "[color=gray]💀 Idle[/color]"
+		"Fall":
+			return "[color=gray]💀 Fall[/color]"
+		_:
+			return "[color=gray]💀 %s[/color]" % action
 
 func transition_to(target_state_path: String, data: Dictionary = {}) -> void:
 	_transition_to_next_state(target_state_path, data)

@@ -14,7 +14,7 @@ func handle_input(_event: InputEvent) -> void:
 func physics_update(delta: float) -> void:
 	var direction: Vector2 = InputManager.get_movement_input()
 	var dash: bool = InputManager.is_dash_just_pressed()
-	# NO manejar jump input aquí - ya no se puede saltar después del double jump
+	var jump: bool = InputManager.is_jump_just_pressed()
 
 	# Handle horizontal movement
 	if direction.x != 0:
@@ -23,15 +23,24 @@ func physics_update(delta: float) -> void:
 	else:
 		enemy.velocity.x = 0
 
+	# Handle jump input for wall jump buffer
+	if jump and enemy.has_skill(Enemy.Skill.WALL_CLIMB):
+		enemy.set_jump_buffer()
+
 	# Check for dash transition
 	if dash and enemy.can_dash():
 		finished.emit(CONTROLLED_DASH)
 		return
 
-	# Check for wall slide
+	# Check for wall slide - also check for buffered wall jump
 	if direction.x != 0 and enemy.is_against_wall() and enemy.has_skill(Enemy.Skill.WALL_CLIMB):
-		finished.emit(CONTROLLED_WALL_SLIDE)
-		return
+		# If we have a buffered wall jump and can wall jump, do it immediately
+		if enemy.has_jump_buffer() and enemy.can_wall_jump():
+			finished.emit(CONTROLLED_JUMP)
+			return
+		elif enemy.can_wall_jump():
+			finished.emit(CONTROLLED_WALL_SLIDE)
+			return
 
 	apply_gravity_and_movement(delta)
 
