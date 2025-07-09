@@ -2,7 +2,7 @@ extends CharacterBody2D
 class_name Weapon
 
 @export var throw_force: float = 320
-@export var attract_speed: float = 900.0
+@export var attract_speed: float = 350.0
 @export var shoot_cooldown: float = 0.3
 @export var knockback_force: float = 140
 @export var gun_get_sound: AudioStream
@@ -11,9 +11,10 @@ class_name Weapon
 @export var throw_sound: AudioStream
 
 # Realistic bounce parameters
-@export var wall_bounce_factor: float = 0.7  # Tennis ball-like bounce off walls
-@export var floor_bounce_factor: float = 0.02  # Almost no bounce on floor
-@export var gravity: float = 980.0
+@export var wall_bounce_factor := 0.7  # Tennis ball-like bounce off walls
+@export var floor_bounce_factor := 0.02  # Almost no bounce on floor
+
+var gravity: float = ProjectSettings.get_setting("physics/2d/default_gravity")
 
 var is_held: bool = false
 var facing_right: bool = true
@@ -72,24 +73,18 @@ func _handle_weapon_physics(delta: float) -> void:
 			var moving_forward := (facing_right and velocity.x > 0) or (not facing_right and velocity.x < 0)
 			if moving_forward:
 				velocity.x = -velocity.x * wall_bounce_factor
-				print("WALL BOUNCE! new velocity.x: ", velocity.x)
 			else:
 				velocity.x = 0  # Stop when hitting wall backward
-				print("WALL STOP! (backward hit)")
 		
 		# Floor/ceiling bounce
 		if abs(normal.y) > 0.5:  # Hitting horizontal surface
 			if velocity.y > 0:  # Hitting floor
 				velocity.y = -velocity.y * floor_bounce_factor
 				# Strong floor friction
-				velocity.x *= 0.5
-				print("FLOOR HIT! Applied friction, velocity.x now: ", velocity.x)
+				velocity.x *= 0.85
 			else:  # Hitting ceiling
 				velocity.y = -velocity.y * wall_bounce_factor
-	
-	# Additional friction when moving slowly
-	if abs(velocity.x) < 30.0 and abs(velocity.y) < 20.0:
-		velocity.x *= 0.8
+
 
 # =============================================================================
 # STATE MANAGEMENT
@@ -188,9 +183,9 @@ func _apply_recoil_if_needed() -> void:
 		var wall_touching := space_state.intersect_ray(query)
 		
 		if wall_touching:
-			# Wall directly touching - only jump upward
+			# Wall directly touching - only jump upward (less)
 			velocity.x = 0
-			velocity.y = -180
+			velocity.y = -140  # Reduced from -180
 		else:
 			# No wall touching - normal knockback
 			velocity.x = knockback_direction.x * knockback_force
