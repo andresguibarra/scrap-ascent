@@ -1,14 +1,19 @@
-extends RigidBody2D
+extends CharacterBody2D
 class_name Weapon
 
-@export var throw_force: float = 350
+@export var throw_force: float = 320
 @export var attract_speed: float = 900.0
 @export var shoot_cooldown: float = 0.3
-@export var knockback_force: float = 120
+@export var knockback_force: float = 140
 @export var gun_get_sound: AudioStream
 @export var shoot_sound_1: AudioStream
 @export var shoot_sound_2: AudioStream
 @export var throw_sound: AudioStream
+
+# Realistic bounce parameters
+@export var wall_bounce_factor: float = 0.7  # Tennis ball-like bounce off walls
+@export var floor_bounce_factor: float = 0.02  # Almost no bounce on floor
+@export var gravity: float = 980.0
 
 var is_held: bool = false
 var facing_right: bool = true
@@ -40,6 +45,51 @@ func _physics_process(delta: float) -> void:
 	_update_shoot_timer(delta)
 	_update_pickup_cooldown(delta)
 	_handle_weapon_state()
+	
+	# Handle physics when not held
+	if not is_held:
+		_handle_weapon_physics(delta)
+
+# =============================================================================
+# WEAPON PHYSICS (SIMPLE)
+# =============================================================================
+func _handle_weapon_physics(delta: float) -> void:
+	if is_being_attracted and holder:
+		_handle_attraction_movement()
+		return
+	
+	# Apply gravity
+	velocity.y += gravity * delta
+	
+	# Use move_and_collide for direct control
+	var collision := move_and_collide(velocity * delta)
+	
+	if collision:
+		var normal := collision.get_normal()
+		
+		# Wall bounce (only when moving forward)
+		if abs(normal.x) > 0.5:  # Hitting a vertical wall
+			var moving_forward := (facing_right and velocity.x > 0) or (not facing_right and velocity.x < 0)
+			if moving_forward:
+				velocity.x = -velocity.x * wall_bounce_factor
+				print("WALL BOUNCE! new velocity.x: ", velocity.x)
+			else:
+				velocity.x = 0  # Stop when hitting wall backward
+				print("WALL STOP! (backward hit)")
+		
+		# Floor/ceiling bounce
+		if abs(normal.y) > 0.5:  # Hitting horizontal surface
+			if velocity.y > 0:  # Hitting floor
+				velocity.y = -velocity.y * floor_bounce_factor
+				# Strong floor friction
+				velocity.x *= 0.5
+				print("FLOOR HIT! Applied friction, velocity.x now: ", velocity.x)
+			else:  # Hitting ceiling
+				velocity.y = -velocity.y * wall_bounce_factor
+	
+	# Additional friction when moving slowly
+	if abs(velocity.x) < 30.0 and abs(velocity.y) < 20.0:
+		velocity.x *= 0.8
 
 # =============================================================================
 # STATE MANAGEMENT
@@ -70,7 +120,6 @@ func _handle_dropped_state() -> void:
 	_check_for_auto_pickup()
 
 func _handle_held_state() -> void:
-	freeze = true
 	if holder:
 		_sync_with_holder()
 		if holder.is_controlled():
@@ -127,16 +176,25 @@ func _launch_projectile(projectile: Projectile) -> void:
 func _apply_recoil_if_needed() -> void:
 	if not is_held:
 		var knockback_direction := Vector2(-1 if facing_right else 1, 0)
-		# Clear any existing horizontal velocity to ensure consistent knockback
-		linear_velocity.x = 0
-		# Apply fresh knockback with additional force to overcome friction
-		linear_velocity += knockback_direction * knockback_force
 		
-		# Add a small upward component to help the weapon move over small obstacles
-		if abs(linear_velocity.y) < 50:  # Only if not already moving vertically
-			linear_velocity.y -= 50  # Small upward impulse
+		# Check if there's a wall DIRECTLY touching the weapon
+		var space_state := get_world_2d().direct_space_state
+		var query := PhysicsRayQueryParameters2D.create(
+			global_position,
+			global_position + knockback_direction * 15  # 15 pixels to detect direct contact
+		)
+		query.collision_mask = collision_mask
+		query.exclude = [self]  # Exclude the weapon itself
+		var wall_touching := space_state.intersect_ray(query)
 		
-		print("Weapon: Knockback applied - direction: ", knockback_direction, " velocity: ", linear_velocity)
+		if wall_touching:
+			# Wall directly touching - only jump upward
+			velocity.x = 0
+			velocity.y = -180
+		else:
+			# No wall touching - normal knockback
+			velocity.x = knockback_direction.x * knockback_force
+			velocity.y = -140
 
 # =============================================================================
 # WEAPON POSITIONING AND DIRECTION
@@ -167,7 +225,7 @@ func _update_position_relative_to_holder() -> void:
 # =============================================================================
 # WEAPON DROPPING AND PICKUP
 # =============================================================================
-func drop(throw_direction: Vector2 = Vector2.ZERO) -> void:
+func drop() -> void:
 	if not is_held:
 		return
 	
@@ -176,7 +234,7 @@ func drop(throw_direction: Vector2 = Vector2.ZERO) -> void:
 	if not _reparent_to_scene(current_global_pos):
 		return
 	
-	_apply_throw_physics(throw_direction)
+	_apply_default_throw()
 	_configure_for_dropped_state()
 	_play_throw_sound()
 
@@ -197,25 +255,24 @@ func _reparent_to_scene(restore_position: Vector2) -> bool:
 		is_held = true
 		return false
 
-func _apply_throw_physics(throw_direction: Vector2) -> void:
-	if throw_direction != Vector2.ZERO:
-		linear_velocity = throw_direction * throw_force
-	else:
-		_apply_default_throw()
-
 func _apply_default_throw() -> void:
-	var angle_deg := 60.0 # el ángulo que quieras
+	var angle_deg := 60.0
 	var dir := 1 if facing_right else -1
 
-	# Pasas de grados a radianes y obtienes el vector (cos θ, sen θ)
 	var throw_angle := Vector2(
 		cos(deg_to_rad(angle_deg)) * dir,
-		-sin(deg_to_rad(angle_deg))            # y negativo porque “-y” es arriba
+		-sin(deg_to_rad(angle_deg))
 	).normalized()
 	var throw_velocity := throw_angle * throw_force
 	
+	print("THROW DEBUG: facing_right=", facing_right, " dir=", dir)
+	print("THROW DEBUG: throw_angle=", throw_angle)
+	print("THROW DEBUG: throw_velocity=", throw_velocity)
+	
 	_add_holder_momentum(throw_velocity)
-	linear_velocity = throw_velocity
+	velocity = throw_velocity
+	
+	print("THROW DEBUG: final velocity=", velocity)
 
 func _add_holder_momentum(throw_velocity: Vector2) -> void:
 	if not holder or not holder is CharacterBody2D:
@@ -275,8 +332,7 @@ func _reparent_to_holder() -> void:
 func _configure_for_held_state() -> void:
 	is_held = true
 	is_being_attracted = false
-	linear_velocity = Vector2.ZERO
-	freeze = true
+	velocity = Vector2.ZERO
 	collision_layer = 0
 	collision_mask = 0
 	
@@ -287,9 +343,8 @@ func _configure_for_held_state() -> void:
 func _configure_for_dropped_state() -> void:
 	is_held = false
 	is_being_attracted = false
-	freeze = false
-	collision_layer = 32
-	collision_mask = 1
+	collision_layer = 32  # Layer 6 (Weapons)
+	collision_mask = 1    # Layer 1 (World) - should be enough for walls
 	
 	# Start pickup cooldown when dropping
 	pickup_cooldown_timer = pickup_cooldown
@@ -298,7 +353,6 @@ func _configure_for_dropped_state() -> void:
 func _configure_for_attraction() -> void:
 	collision_layer = 0
 	collision_mask = 0
-	freeze = true
 
 # =============================================================================
 # AUTO SETUP
@@ -311,7 +365,6 @@ func _auto_setup_holder() -> void:
 	holder = parent_node
 	is_held = true
 	
-	#_configure_for_held_state()
 	_update_flip()
 
 # =============================================================================

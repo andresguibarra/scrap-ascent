@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3 uid="uid://blayr5l6n8opq"]
+[gd_scene load_steps=9 format=3 uid="uid://blayr5l6n8opq"]
 
 [ext_resource type="Script" uid="uid://dt82brficleew" path="res://Scripts/Weapon.gd" id="1_weapon"]
 [ext_resource type="AudioStream" uid="uid://nsiln6kk7qs2" path="res://Assets/Sounds/aGunGet.ogg" id="2_lstme"]
@@ -7,22 +7,14 @@
 [ext_resource type="AudioStream" uid="uid://c05kr2kuurxm3" path="res://Assets/Sounds/aBlasterB.ogg" id="4_lx1ig"]
 [ext_resource type="AudioStream" uid="uid://dq713oi83jwsb" path="res://Assets/Sounds/aThrowB.ogg" id="5_lx1ig"]
 
-[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_m5ws0"]
-friction = 0.3
-bounce = 0.1
-
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_1"]
 size = Vector2(14, 8.5)
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_pickup"]
 radius = 17.0
 
-[node name="Weapon" type="RigidBody2D"]
+[node name="Weapon" type="CharacterBody2D"]
 collision_layer = 32
-physics_material_override = SubResource("PhysicsMaterial_m5ws0")
-lock_rotation = true
-linear_damp = 0.1
-angular_damp = 2.0
 script = ExtResource("1_weapon")
 gun_get_sound = ExtResource("2_lstme")
 shoot_sound_1 = ExtResource("3_s5b11")
