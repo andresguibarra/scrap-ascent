@@ -11,8 +11,6 @@ func enter(_previous_state_path: String, _data := {}) -> void:
 	if enemy.can_wall_jump() and enemy.has_jump_buffer():
 		finished.emit(CONTROLLED_JUMP)
 		return
-	# else: 
-	# 	enemy.reset_wall_jump_cooldown()
 
 func handle_input(_event: InputEvent) -> void:
 	if enemy.is_controlled() and InputManager.is_possess_just_pressed():
