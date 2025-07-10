@@ -340,7 +340,7 @@ func _configure_for_held_state() -> void:
 func _configure_for_dropped_state() -> void:
 	is_held = false
 	is_being_attracted = false
-	collision_layer = 32  # Layer 6 (Weapons)
+	collision_layer = 32  # Layer 6 (Weapons) - keep weapons in their own layer
 	collision_mask = 1    # Layer 1 (World) - should be enough for walls
 	
 	# Start pickup cooldown when dropping

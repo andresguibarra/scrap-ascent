@@ -56,8 +56,8 @@ func _setup_button() -> void:
 	if area:
 		# Configure collision detection based on type
 		if _is_temporary_button():
-			# Temporary buttons (BUTTON) detect enemies (layer 3)
-			area.collision_mask = 1 << 2  # Layer 3 (Enemies)
+			# Temporary buttons detect enemies (layer 3) and weapons (layer 6)
+			area.collision_mask = (1 << 2) | (1 << 5)  # Layer 3 (Enemies) + Layer 6 (Weapons)
 		else:
 			# Permanent buttons (LIGHT_*) detect projectiles only
 			area.collision_mask = 1 << 4  # Layer 5 (Projectiles) - adjust layer as needed
@@ -97,8 +97,8 @@ func _is_permanent_button() -> bool:
 	return type == Type.LIGHT_LEFT or type == Type.LIGHT_RIGHT
 
 func _on_body_entered(body: Node2D) -> void:
-	if _is_temporary_button() and body.is_in_group("enemies"):
-		# Temporary buttons activated by enemies
+	if _is_temporary_button() and (body.is_in_group("enemies") or body.is_in_group("weapons")):
+		# Temporary buttons activated by enemies or weapons
 		enemies_on_button += 1
 		if not is_active:
 			_activate_button()
@@ -108,7 +108,7 @@ func _on_body_entered(body: Node2D) -> void:
 			_activate_permanent_button()
 
 func _on_body_exited(body: Node2D) -> void:
-	if _is_temporary_button() and body.is_in_group("enemies"):
+	if _is_temporary_button() and (body.is_in_group("enemies") or body.is_in_group("weapons")):
 		# Only temporary buttons can be deactivated
 		enemies_on_button -= 1
 		if enemies_on_button <= 0 and is_active:
