@@ -229,6 +229,12 @@ func drop() -> void:
 	if not _reparent_to_scene(current_global_pos):
 		return
 	
+	# Simple solution: move weapon to a fixed offset from player
+	# Esto lo estoy haciendo porque a veces el arma se queda dentro de las paredes. 
+	# Con este fix ajusto manualmente la posición desde donde se lanza.
+	var offset := Vector2(4 if facing_right else -4, -4)
+	global_position = holder.global_position + offset
+	
 	_apply_default_throw()
 	_configure_for_dropped_state()
 	_play_throw_sound()
@@ -259,10 +265,6 @@ func _apply_default_throw() -> void:
 		-sin(deg_to_rad(angle_deg))
 	).normalized()
 	var throw_velocity := throw_angle * throw_force
-	
-	print("THROW DEBUG: facing_right=", facing_right, " dir=", dir)
-	print("THROW DEBUG: throw_angle=", throw_angle)
-	print("THROW DEBUG: throw_velocity=", throw_velocity)
 	
 	_add_holder_momentum(throw_velocity)
 	velocity = throw_velocity
