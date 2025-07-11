@@ -2,7 +2,6 @@ extends RigidBody2D
 class_name Projectile
 
 @export var speed: float = 500.0
-@export var damage: float = 10.0
 @export var impact_duration: float = 0.1  # Duration to show impact frames
 @export var shooter_grace_period: float = 0.1  # Time before projectile can hit its shooter
 
@@ -64,11 +63,13 @@ func _on_body_entered(body: Node) -> void:
 	has_hit = true
 	
 	# Stop the projectile movement
+	linear_velocity = Vector2.ZERO
+	gravity_scale = 0.0
 	freeze = true
-	
+	print("Projectile frozen at position: ", global_position)
 	# Apply damage if the body can take damage
 	if body.has_method("take_damage"):
-		body.take_damage(damage)
+		body.take_damage()
 	
 	# Show impact animation
 	_show_impact_frames()
@@ -80,11 +81,11 @@ func _show_impact_frames() -> void:
 	
 	# Show frame 3 first (impact frame)
 	sprite.frame = 2
-	
+	impact_timer.start()
 	# Create a quick tween to cycle through impact frames
-	var tween = create_tween()
-	tween.tween_callback(_set_frame.bind(3)).set_delay(impact_duration * 0.5)
-	tween.tween_callback(queue_free).set_delay(impact_duration * 0.5)
+	#var tween = create_tween()
+	#tween.tween_callback(_set_frame.bind(3)).set_delay(impact_duration * 0.5)
+	#tween.tween_callback(queue_free).set_delay(impact_duration * 0.5)
 
 func _set_frame(frame_number: int) -> void:
 	if sprite:
