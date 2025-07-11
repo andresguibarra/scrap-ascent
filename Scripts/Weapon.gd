@@ -299,7 +299,6 @@ func _configure_for_dropped_state() -> void:
 	# Start pickup cooldown when dropping
 	pickup_cooldown_timer = pickup_cooldown
 	holder_has_left_area = false  # Reset state when dropping
-	_reset_weapon_color_modulation()
 
 func _configure_for_attraction() -> void:
 	collision_layer = 0
@@ -394,10 +393,6 @@ func _get_holder_color() -> Color:
 	# For Enemy holders, get their tier color
 	if holder.has_method("get_tier_color"):
 		return holder.get_tier_color()
-	
-	# For Orb holders, use a light blue color
-	if holder.name == "Orb" or holder.is_in_group("player"):
-		return Color(0.7, 0.9, 1.0, 1.0)  # Light blue
 	
 	# Default to white (no modulation)
 	return Color.WHITE
