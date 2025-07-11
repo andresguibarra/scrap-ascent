@@ -16,6 +16,10 @@ func physics_update(delta: float) -> void:
 	var dash: bool = InputManager.is_dash_just_pressed()
 	var jump: bool = InputManager.is_jump_just_pressed()
 
+	# Apply ceiling corner correction while jumping upward
+	if enemy.velocity.y < 0:
+		enemy.apply_ceiling_corner_correction()
+
 	# Handle horizontal movement
 	if direction.x != 0:
 		enemy.velocity.x = direction.x * enemy.ai_speed

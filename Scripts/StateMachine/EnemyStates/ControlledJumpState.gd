@@ -20,6 +20,11 @@ func physics_update(delta: float) -> void:
 	
 	if enemy.wall_jump_cooldown > 0.0:
 		enemy.wall_jump_cooldown -= delta
+	
+	# Apply ceiling corner correction while jumping upward
+	if enemy.velocity.y < 0:
+		enemy.apply_ceiling_corner_correction()
+	
 	# Handle horizontal movement
 	if direction.x != 0:
 		enemy.velocity.x = direction.x * enemy.ai_speed
@@ -51,4 +56,4 @@ func physics_update(delta: float) -> void:
 		return
 	
 	apply_gravity_and_movement(delta)
-	
+

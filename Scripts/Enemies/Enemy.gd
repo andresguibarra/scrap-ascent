@@ -90,12 +90,18 @@ var jump_buffer_time: float = 0.3  # Reduced from 0.3 to 0.15 for better balance
 # Node references
 @onready var edge_raycast: RayCast2D = $EdgeRayCast2D
 @onready var wall_raycast: RayCast2D = $WallRayCast2D
+@onready var ceiling_left_raycast: RayCast2D = $RayCastTopLeft
+@onready var ceiling_right_raycast: RayCast2D = $RayCastTopRight
+@onready var ceiling_center_raycast: RayCast2D = $RayCastTopCenter
 @onready var animated_sprite: AnimatedSprite2D = $AnimatedSprite2D
 @onready var eyes_sprite: AnimatedSprite2D = $Eyes
 @onready var light: PointLight2D = $PointLight2D
 @onready var damage_particles: GPUParticles2D = $DamageParticles
 @onready var audio_player: AudioStreamPlayer = $AudioStreamPlayer
 @onready var state_machine: Node = $StateMachine
+
+# Physics constants
+@export var ceiling_correction_distance: float = 4.0  # Distance to move when correcting ceiling collision
 
 func _ready() -> void:
 	if Engine.is_editor_hint():
@@ -291,6 +297,28 @@ func is_same_wall_as_last_jump(wall_normal_to_check: Vector2) -> bool:
 	var dot_product = wall_normal_to_check.dot(last_wall_jump_normal)
 	var same_wall = dot_product > 0.9
 	return same_wall
+
+# CEILING CORNER CORRECTION
+func apply_ceiling_corner_correction() -> void:
+	if not ceiling_left_raycast or not ceiling_right_raycast or not ceiling_center_raycast:
+		return
+		
+	# Force update both raycasts
+	ceiling_left_raycast.force_raycast_update()
+	ceiling_right_raycast.force_raycast_update()
+	ceiling_center_raycast.force_raycast_update()
+	
+	var left_hitting = ceiling_left_raycast.is_colliding()
+	var right_hitting = ceiling_right_raycast.is_colliding()
+	var center_hitting = ceiling_center_raycast.is_colliding()
+	
+	# If only one raycast is hitting, move away from it
+	if left_hitting and not right_hitting and not center_hitting:
+		# Left raycast hitting ceiling, move right
+		global_position.x += ceiling_correction_distance
+	elif right_hitting and not left_hitting and not center_hitting:
+		# Right raycast hitting ceiling, move left
+		global_position.x -= ceiling_correction_distance
 
 # PUBLIC METHODS FOR STATES (called by FSM states)
 func apply_movement_and_gravity(delta: float) -> void:

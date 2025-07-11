@@ -239,6 +239,7 @@ double_jump_sound = ExtResource("3_468r6")
 dash_sound = ExtResource("4_0fmw3")
 release_sound = ExtResource("5_n01f6")
 destroy_sound = ExtResource("4_destroy")
+ceiling_correction_distance = null
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 position = Vector2(-0.5, 0)
@@ -249,6 +250,17 @@ target_position = Vector2(15, 15)
 
 [node name="WallRayCast2D" type="RayCast2D" parent="."]
 target_position = Vector2(20, 0)
+
+[node name="RayCastTopLeft" type="RayCast2D" parent="."]
+position = Vector2(-7, 0)
+target_position = Vector2(0, -15)
+
+[node name="RayCastTopCenter" type="RayCast2D" parent="."]
+target_position = Vector2(0, -15)
+
+[node name="RayCastTopRight" type="RayCast2D" parent="."]
+position = Vector2(7, 0)
+target_position = Vector2(0, -15)
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
 modulate = Color(0.8, 0.4, 0.4, 1)
