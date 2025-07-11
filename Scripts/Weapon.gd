@@ -336,6 +336,7 @@ func _configure_for_held_state() -> void:
 	_play_gun_get_sound()
 	_update_facing_direction()
 	_update_position_relative_to_holder()
+	_apply_holder_color_modulation()
 
 func _configure_for_dropped_state() -> void:
 	is_held = false
@@ -362,6 +363,8 @@ func _auto_setup_holder() -> void:
 	holder = parent_node
 	is_held = true
 	
+	# Apply holder color modulation during auto-setup
+	_apply_holder_color_modulation()
 	_update_flip()
 
 # =============================================================================
@@ -405,6 +408,40 @@ func _check_for_auto_pickup() -> void:
 	# 5. Weapon is not already being attracted
 	if not is_held and holder and holder_in_area and holder_has_left_area and pickup_cooldown_timer <= 0.0 and not is_being_attracted:
 		return_to_holder()
+
+# =============================================================================
+# HOLDER COLOR MODULATION
+# =============================================================================
+func _apply_holder_color_modulation() -> void:
+	if not holder or not sprite:
+		return
+	
+	var holder_color := _get_holder_color()
+	if holder_color == Color.WHITE:
+		return  # No modulation needed
+	
+	# Apply a light modulation (mix with white for subtle effect)
+	var modulation_strength := 0.3  # 30% holder color, 70% original
+	var modulated_color := Color.WHITE.lerp(holder_color, modulation_strength)
+	sprite.modulate = modulated_color
+	
+	print("Weapon: Applied holder color modulation - ", modulated_color)
+
+func _reset_weapon_color_modulation() -> void:
+	if sprite:
+		sprite.modulate = Color.WHITE
+		print("Weapon: Reset weapon color modulation")
+
+func _get_holder_color() -> Color:
+	if not holder:
+		return Color.WHITE
+	
+	# For Enemy holders, get their tier color
+	if holder.has_method("get_tier_color"):
+		return holder.get_tier_color()
+	
+	# Default to white (no modulation)
+	return Color.WHITE
 
 # =============================================================================
 # AUDIO SYSTEM
