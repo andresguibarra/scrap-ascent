@@ -27,6 +27,7 @@ sources/0 = SubResource("TileSetAtlasSource_cteer")
 
 [node name="TestingMechanics" type="Node2D"]
 script = ExtResource("1_63b4a")
+enable_audio = true
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
 environment = SubResource("Environment_1")

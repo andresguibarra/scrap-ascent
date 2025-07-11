@@ -421,7 +421,7 @@ func _apply_holder_color_modulation() -> void:
 		return  # No modulation needed
 	
 	# Apply a light modulation (mix with white for subtle effect)
-	var modulation_strength := 0.3  # 30% holder color, 70% original
+	var modulation_strength := 0.5  # 30% holder color, 70% original
 	var modulated_color := Color.WHITE.lerp(holder_color, modulation_strength)
 	sprite.modulate = modulated_color
 	

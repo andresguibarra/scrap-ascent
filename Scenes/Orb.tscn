@@ -1,4 +1,4 @@
-[gd_scene load_steps=24 format=3 uid="uid://c8h3d5k2nap1q"]
+[gd_scene load_steps=25 format=3 uid="uid://c8h3d5k2nap1q"]
 
 [ext_resource type="Script" uid="uid://b0xdnweui2g1u" path="res://Scripts/Orb.gd" id="1_orb"]
 [ext_resource type="Texture2D" uid="uid://dn6x783lgyhe2" path="res://Assets/Orb.png" id="2_6cxvw"]
@@ -144,8 +144,11 @@ gravity = Vector3(0, 0, 0)
 scale_min = 0.08
 color = Color(0.565, 0.925, 0.949, 0.9)
 
+[sub_resource type="CircleShape2D" id="CircleShape2D_af5qb"]
+radius = 88.0
+
 [node name="Orb" type="CharacterBody2D"]
-collision_layer = 8
+collision_layer = 128
 script = ExtResource("1_orb")
 orb_sound = ExtResource("4_orb_sound")
 possession_sound = ExtResource("3_af5qb")
@@ -185,3 +188,11 @@ lifetime = 1.2
 process_material = SubResource("ParticleProcessMaterial_jgmpi")
 
 [node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="."]
+
+[node name="PosessionArea2D" type="Area2D" parent="."]
+collision_layer = 0
+collision_mask = 4
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="PosessionArea2D"]
+shape = SubResource("CircleShape2D_af5qb")
+debug_color = Color(0.400614, 0.500631, 0.906076, 0.42)
