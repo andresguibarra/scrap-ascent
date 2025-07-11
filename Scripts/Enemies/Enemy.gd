@@ -347,7 +347,7 @@ func destroy_chip() -> void:
 			state_machine.transition_to(EnemyState.INERT_FALL)
 
 # DAMAGE SYSTEM
-func take_damage(_damage_amount: float) -> void:
+func take_damage() -> void:
 	# # Only take damage if not controlled (to prevent self-damage)
 	if current_state == Enemy.State.CONTROLLED:
 		release_control()

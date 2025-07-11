@@ -212,7 +212,7 @@ func _update_facing_direction() -> void:
 
 func _update_flip() -> void:
 	sprite.flip_h = not facing_right
-	shoot_point.position.x = -2 if facing_right else 2
+	shoot_point.position.x = -9 if facing_right else 9
 
 func _update_position_relative_to_holder() -> void:
 	position = Vector2(12 if facing_right else -12, 0)

@@ -18,6 +18,7 @@ func _ready() -> void:
 	# Enable contact monitoring for collision detection
 	contact_monitor = true
 	max_contacts_reported = 10
+	continuous_cd = RigidBody2D.CCD_MODE_CAST_RAY
 	
 	# Connect the body_entered signal
 	body_entered.connect(_on_body_entered)
@@ -32,9 +33,15 @@ func _ready() -> void:
 	if sprite:
 		sprite.frame = 0
 
-func _physics_process(delta: float) -> void:
+func _process(delta: float) -> void:
 	if shooter_grace_timer > 0.0:
 		shooter_grace_timer -= delta
+	if has_hit:
+		# If projectile has hit, we can stop processing movement
+		linear_velocity = Vector2.ZERO
+		gravity_scale = 0.0
+		freeze = true
+		return
 
 func launch(direction: Vector2, from_shooter: Node = null, held_when_fired: bool = false) -> void:
 	linear_velocity = direction * speed
