@@ -44,13 +44,11 @@ ceiling_correction_distance = 6.0
 position = Vector2(218, 253)
 tier = 2
 has_weapon = true
-release_sound = null
 ceiling_correction_distance = 6.0
 
 [node name="Enemy_Tier3" parent="." instance=ExtResource("2_enemy")]
 position = Vector2(574, 203)
 tier = 3
-release_sound = null
 ceiling_correction_distance = 6.0
 
 [node name="Enemy_Tier4_Armed" parent="." instance=ExtResource("2_enemy")]
@@ -58,7 +56,6 @@ position = Vector2(284, 354)
 tier = 4
 has_weapon = true
 face_right = true
-release_sound = null
 ceiling_correction_distance = 6.0
 
 [node name="Camera2D" type="Camera2D" parent="."]

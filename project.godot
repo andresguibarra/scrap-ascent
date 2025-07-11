@@ -23,6 +23,7 @@ boot_splash/minimum_display_time=2000
 
 InputManager="*res://Scripts/Autoloads/InputManager.gd"
 BackgroundMusic="*res://Scenes/Autoloads/BackgroundMusic.tscn"
+AudioManager="*res://Scripts/Autoloads/AudioManager.gd"
 
 [display]
 

@@ -187,8 +187,6 @@ amount = 20
 lifetime = 1.2
 process_material = SubResource("ParticleProcessMaterial_jgmpi")
 
-[node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="."]
-
 [node name="PosessionArea2D" type="Area2D" parent="."]
 collision_layer = 0
 collision_mask = 4
