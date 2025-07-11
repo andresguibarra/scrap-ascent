@@ -243,7 +243,7 @@ func can_wall_jump() -> bool:
 		return false
 	
 	# Check if we're in cooldown for the current wall
-	if is_against_wall():
+	if is_against_wall(true):
 		var current_wall_normal = get_current_wall_normal()
 		var is_same_wall = is_same_wall_as_last_jump(current_wall_normal)
 		
@@ -446,12 +446,13 @@ func _update_weapon_in_editor() -> void:
 	elif not has_weapon and existing_weapon:
 		existing_weapon.queue_free()
 
-func is_against_wall() -> bool:
+func is_against_wall(is_wall_climbing: bool) -> bool:
 	if not wall_raycast:
 		return false
 		
 	var direction = 1.0 if face_right else -1.0
-	wall_raycast.target_position = Vector2(20 * direction, 0)
+	var longitude = 20 if is_wall_climbing else 9
+	wall_raycast.target_position = Vector2(longitude * direction, 0)
 	wall_raycast.force_raycast_update()
 	return wall_raycast.is_colliding()
 

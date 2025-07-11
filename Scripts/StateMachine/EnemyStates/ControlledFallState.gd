@@ -37,7 +37,7 @@ func physics_update(delta: float) -> void:
 	# Check for wall slide - check both current state and near-wall state
 	if direction.x != 0 and enemy.has_skill(Enemy.Skill.WALL_CLIMB):
 		# Try to transition to wall slide if against wall or moving toward a wall
-		if enemy.is_against_wall():
+		if enemy.is_against_wall(true):
 			finished.emit(CONTROLLED_WALL_SLIDE)
 			return
 	

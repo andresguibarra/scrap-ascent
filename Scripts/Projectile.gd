@@ -19,6 +19,7 @@ func _ready() -> void:
 	contact_monitor = true
 	max_contacts_reported = 10
 	continuous_cd = RigidBody2D.CCD_MODE_CAST_RAY
+	lock_rotation = true
 	
 	# Connect the body_entered signal
 	body_entered.connect(_on_body_entered)

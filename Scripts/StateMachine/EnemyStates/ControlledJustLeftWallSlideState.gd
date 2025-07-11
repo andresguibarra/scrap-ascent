@@ -38,7 +38,7 @@ func physics_update(delta: float) -> void:
 		return
 	
 	# Priority 3: Return to Wall Slide (if pressing toward wall and against wall)
-	if direction.x != 0 and enemy.is_against_wall() and enemy.has_skill(Enemy.Skill.WALL_CLIMB):
+	if direction.x != 0 and enemy.is_against_wall(true) and enemy.has_skill(Enemy.Skill.WALL_CLIMB):
 		finished.emit(CONTROLLED_WALL_SLIDE)
 		return
 	

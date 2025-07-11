@@ -33,7 +33,7 @@ func physics_update(delta: float) -> void:
 		return
 
 	# Check for wall slide - also check for buffered wall jump
-	if direction.x != 0 and enemy.is_against_wall() and enemy.has_skill(Enemy.Skill.WALL_CLIMB):
+	if direction.x != 0 and enemy.is_against_wall(true) and enemy.has_skill(Enemy.Skill.WALL_CLIMB):
 		# If we have a buffered wall jump and can wall jump, do it immediately
 		if enemy.has_jump_buffer() and enemy.can_wall_jump():
 			finished.emit(CONTROLLED_JUMP)

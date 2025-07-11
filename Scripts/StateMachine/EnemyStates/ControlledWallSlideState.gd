@@ -55,7 +55,7 @@ func physics_update(_delta: float) -> void:
 	enemy.move_and_slide()
 	
 	# Exit wall slide if no longer against wall
-	if not enemy.is_against_wall():
+	if not enemy.is_against_wall(true):
 		if enemy.is_on_floor():
 			finished.emit(CONTROLLED_IDLE)
 		else:

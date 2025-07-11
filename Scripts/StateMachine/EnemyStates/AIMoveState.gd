@@ -26,7 +26,7 @@ func get_ai_patrol_direction() -> float:
 		return -direction
 	
 	# Check for wall collision
-	if enemy.is_against_wall():
+	if enemy.is_against_wall(false):
 		return -direction
 	
 	return direction
