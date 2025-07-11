@@ -1,10 +1,10 @@
 extends CharacterBody2D
 class_name Weapon
 
-@export var throw_force: float = 320
+@export var throw_force: float = 340
 @export var attract_speed: float = 350.0
 @export var shoot_cooldown: float = 0.3
-@export var knockback_force: float = 140
+@export var knockback_force: float = 80
 @export var gun_get_sound: AudioStream
 @export var shoot_sound_1: AudioStream
 @export var shoot_sound_2: AudioStream

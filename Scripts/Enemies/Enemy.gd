@@ -146,10 +146,10 @@ func _physics_process(delta: float) -> void:
 func _setup_tier_configuration() -> void:
 	if tier in skills:
 		match tier:
-			1: ai_speed = 80.0
-			2: ai_speed = 100.0
-			3: ai_speed = 120.0
-			4: ai_speed = 140.0
+			1: ai_speed = 120.0
+			2: ai_speed = 130.0
+			3: ai_speed = 140.0
+			4: ai_speed = 150.0
 
 func _setup_weapon_if_needed() -> void:
 	if has_weapon and not weapon_instance:
