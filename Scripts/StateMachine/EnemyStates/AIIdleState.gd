@@ -16,8 +16,12 @@ func physics_update(delta: float) -> void:
 	idle_timer += delta
 	
 	# Auto-transition to move state after max_idle_time
-	if enemy.is_on_floor():
-		finished.emit(AI_MOVE)
+	if not enemy.is_on_floor():
+		finished.emit(EnemyState.AI_FALL)
+		return
+	
+	if idle_timer >= max_idle_time:
+		finished.emit(EnemyState.AI_MOVE)
 		return
 	
 	# Check for movement transitions

@@ -6,6 +6,5 @@ func enter(_previous_state_path: String, _data := {}) -> void:
 func physics_update(delta: float) -> void:
 	apply_gravity_and_movement(delta)
 	
-	var movement_transition = check_movement_transitions()
-	if movement_transition != "":
-		finished.emit(movement_transition)
+	if enemy.is_on_floor():
+		finished.emit(EnemyState.AI_MOVE)

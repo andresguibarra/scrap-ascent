@@ -9,13 +9,10 @@ func physics_update(delta: float) -> void:
 	
 	enemy.velocity.x = direction * enemy.ai_speed
 	enemy.update_sprite_flip()
-	
 	apply_gravity_and_movement(delta)
 	
-	# Check for movement transitions
-	var movement_transition = check_movement_transitions()
-	if movement_transition != "":
-		finished.emit(movement_transition)
+	if not enemy.is_on_floor():
+		finished.emit(EnemyState.AI_FALL)
 		
 # UTILITY METHODS FOR AI STATES
 func get_ai_patrol_direction() -> float:

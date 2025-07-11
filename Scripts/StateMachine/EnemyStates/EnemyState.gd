@@ -59,8 +59,6 @@ func apply_gravity_and_movement(delta: float) -> void:
 	enemy.apply_movement_and_gravity(delta)
 
 # Common transition checks
-
-
 func check_movement_transitions() -> String:
 	if not enemy:
 		return ""
@@ -68,20 +66,8 @@ func check_movement_transitions() -> String:
 	# Check movement-based transitions based on current state name and physics
 	var current_name = name
 	
-	# For AI states
-	if current_name.begins_with("AI"):
-		if enemy.is_on_floor():
-			if abs(enemy.velocity.x) > 5 and current_name != "AIMoveState":
-				return AI_MOVE
-			elif abs(enemy.velocity.x) <= 5 and current_name != "AIIdleState":
-				return AI_IDLE
-		else:
-			if enemy.velocity.y < -50 and current_name != "AIJumpState":
-				return AI_JUMP
-			elif enemy.velocity.y >= -50 and current_name != "AIFallState":
-				return AI_FALL
 	# For INERT states
-	elif current_name.begins_with("Inert"):
+	if current_name.begins_with("Inert"):
 		if enemy.is_on_floor():
 			if current_name != "InertIdleState":
 				return INERT_IDLE

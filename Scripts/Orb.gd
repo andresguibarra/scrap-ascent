@@ -77,7 +77,6 @@ func _handle_possession_movement(_delta: float) -> void:
 	
 	# Check if line of sight is still clear during movement
 	if not _has_clear_line_of_sight(target_enemy):
-		#print("Orb: Line of sight lost during possession")
 		_cancel_possession()
 		return
 	
@@ -284,7 +283,6 @@ func _setup_line_of_sight() -> void:
 	if line_of_sight:
 		line_of_sight.enabled = true
 		line_of_sight.collision_mask = 5 # Collide with world (1) and enemy (4) layers
-		print("Orb: Line of sight raycast initialized")
 	else:
 		print("Orb: Warning - LineOfSight RayCast2D not found!")
 
@@ -322,7 +320,6 @@ func _has_clear_line_of_sight(enemy: Enemy) -> bool:
 			return true
 		
 		# If we hit something else (walls, platforms), there's an obstacle
-		print("Orb: Line of sight blocked by: ", collider.name if collider else "unknown")
 		return false
 	
 	# If not colliding with anything, there's a clear path

@@ -318,7 +318,7 @@ position = Vector2(440, 112)
 tier = 2
 
 [node name="Orb" parent="." instance=ExtResource("1_kln2b")]
-position = Vector2(368, 371)
+position = Vector2(623, 94)
 
 [node name="PuzzleWithGun" type="Node" parent="."]
 
@@ -644,6 +644,9 @@ door_size_tiles = 2
 [node name="Exit" parent="." instance=ExtResource("11_4kpch")]
 position = Vector2(416, -1880)
 metadata/_edit_lock_ = true
+
+[node name="EnemyTesting" parent="." instance=ExtResource("6_v1gob")]
+position = Vector2(645, 111)
 
 [connection signal="possession_ended" from="Orb" to="Camera2D" method="_on_possession_ended"]
 [connection signal="possession_started" from="Orb" to="Camera2D" method="_on_possession_started"]
