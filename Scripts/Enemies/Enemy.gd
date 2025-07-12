@@ -222,9 +222,10 @@ func get_tier_color() -> Color:
 func has_skill(skill: Skill) -> bool:
 	return skill in skills.get(tier, [])
 
-func play_sound(sound: AudioStream) -> void:
+func play_sound(sound: AudioStream, volume_db:= 0.0) -> void:
 	if sound and audio_player:
 		audio_player.stream = sound
+		audio_player.volume_db = volume_db
 		audio_player.play()
 
 func spawn_damage_particles() -> void:
@@ -495,7 +496,7 @@ func is_against_wall(is_wall_climbing: bool) -> bool:
 		return false
 		
 	var direction = 1.0 if face_right else -1.0
-	var longitude = 20 if is_wall_climbing else 9
+	var longitude = 15 if is_wall_climbing else 9
 	wall_raycast.target_position = Vector2(longitude * direction, 0)
 	wall_raycast.force_raycast_update()
 	return wall_raycast.is_colliding()
@@ -510,7 +511,7 @@ func is_at_edge() -> bool:
 	return not edge_raycast.is_colliding()
 
 func create_release_orb() -> void:
-	play_sound(release_sound)
+	play_sound(release_sound, -18.0)
 	
 	var orb_scene := preload("res://Scenes/Orb.tscn")
 	var new_orb := orb_scene.instantiate()

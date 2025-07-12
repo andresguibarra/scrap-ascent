@@ -1,0 +1,18 @@
+[gd_scene load_steps=3 format=3 uid="uid://c1nl5hwnp6n5v"]
+
+[ext_resource type="Texture2D" uid="uid://dq18nghbnatul" path="res://Assets/Passbox.png" id="1_fgodj"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_eisxr"]
+size = Vector2(16, 16)
+
+[node name="PassBox" type="StaticBody2D"]
+collision_layer = 64
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(8, 8)
+shape = SubResource("RectangleShape2D_eisxr")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+position = Vector2(8, 8)
+texture = ExtResource("1_fgodj")

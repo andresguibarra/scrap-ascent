@@ -10,7 +10,7 @@ size = Vector2(48, 16)
 
 [sub_resource type="Theme" id="Theme_win"]
 default_font = ExtResource("2_font")
-default_font_size = 16
+default_font_size = 15
 
 [node name="Exit" type="Area2D"]
 collision_layer = 0
