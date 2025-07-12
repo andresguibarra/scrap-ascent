@@ -3,6 +3,8 @@ class_name Weapon
 
 @export var throw_force: float = 340
 @export var attract_speed: float = 350.0
+@export var attract_acceleration: float = 800.0  # Acceleration when returning to holder
+@export var max_attract_speed: float = 800.0     # Maximum speed when returning
 @export var shoot_cooldown: float = 0.3
 @export var knockback_force: float = 80
 @export var gun_get_sound: AudioStream
@@ -19,6 +21,7 @@ var gravity: float = ProjectSettings.get_setting("physics/2d/default_gravity")
 var is_held: bool = false
 var facing_right: bool = true
 var is_being_attracted: bool = false
+var current_attract_speed: float = 0.0  # Current speed when being attracted
 var shoot_timer: float = 0.0
 
 # Auto-pickup system
@@ -291,10 +294,12 @@ func _add_holder_momentum(throw_velocity: Vector2) -> void:
 func return_to_holder() -> void:
 	if holder:
 		is_being_attracted = true
+		current_attract_speed = attract_speed  # Start with base speed
 
 func _handle_attraction_movement() -> void:
 	if not holder:
 		is_being_attracted = false
+		current_attract_speed = 0.0  # Reset attraction speed
 		return
 	
 	_configure_for_attraction()
@@ -303,7 +308,19 @@ func _handle_attraction_movement() -> void:
 
 func _move_towards_holder() -> void:
 	var direction := (holder.global_position - global_position).normalized()
-	global_position += direction * attract_speed * get_physics_process_delta_time()
+	var distance := global_position.distance_to(holder.global_position)
+	var delta := get_physics_process_delta_time()
+	
+	# Calculate acceleration based on distance - farther away = more acceleration
+	var distance_factor = clamp(distance / 200.0, 0.3, 2.0)  # Scale acceleration by distance
+	var acceleration = attract_acceleration * distance_factor
+	
+	# Apply acceleration to current speed
+	current_attract_speed += acceleration * delta
+	current_attract_speed = min(current_attract_speed, max_attract_speed)
+	
+	# Move towards holder
+	global_position += direction * current_attract_speed * delta
 
 func _check_pickup_distance() -> void:
 	var distance := global_position.distance_to(holder.global_position)
@@ -329,6 +346,7 @@ func _reparent_to_holder() -> void:
 func _configure_for_held_state() -> void:
 	is_held = true
 	is_being_attracted = false
+	current_attract_speed = 0.0  # Reset attraction speed
 	velocity = Vector2.ZERO
 	collision_layer = 0
 	collision_mask = 0
@@ -341,6 +359,7 @@ func _configure_for_held_state() -> void:
 func _configure_for_dropped_state() -> void:
 	is_held = false
 	is_being_attracted = false
+	current_attract_speed = 0.0  # Reset attraction speed
 	collision_layer = 32  # Layer 6 (Weapons) - keep weapons in their own layer
 	collision_mask = 1    # Layer 1 (World) - should be enough for walls
 	
