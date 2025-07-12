@@ -295,9 +295,8 @@ position = Vector2(6, 2)
 
 [node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="."]
 
-[node name="StateMachine" type="Node" parent="." node_paths=PackedStringArray("initial_state")]
+[node name="StateMachine" type="Node" parent="."]
 script = ExtResource("5_statemachine")
-initial_state = NodePath("AIMoveState")
 
 [node name="AIIdleState" type="Node" parent="StateMachine"]
 script = ExtResource("6_ai_idle")

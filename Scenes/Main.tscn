@@ -318,7 +318,7 @@ position = Vector2(440, 112)
 tier = 2
 
 [node name="Orb" parent="." instance=ExtResource("1_kln2b")]
-position = Vector2(623, 94)
+position = Vector2(592, 108)
 
 [node name="PuzzleWithGun" type="Node" parent="."]
 

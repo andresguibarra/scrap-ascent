@@ -2,11 +2,9 @@ class_name StateMachine extends Node
 
 signal state_changed()
 
-@export var initial_state: Node = null
+# Removed @export var initial_state - now determined by Enemy.current_state
 
-@onready var state: Node = (func get_initial_state() -> Node:
-	return initial_state if initial_state != null else get_child(0)
-).call()
+@onready var state: Node
 
 func _ready() -> void:
 	for state_node in get_children():
@@ -16,6 +14,9 @@ func _ready() -> void:
 	# Wait for owner to be ready before entering initial state
 	if owner:
 		await owner.ready
+	
+	# Determine initial state based on Enemy.current_state
+	state = _get_initial_state_from_enemy()
 	
 	# Initialize state
 	if state:
@@ -118,3 +119,29 @@ func _get_inert_state_display(action: String) -> String:
 
 func transition_to(target_state_path: String, data: Dictionary = {}) -> void:
 	_transition_to_next_state(target_state_path, data)
+
+func _get_initial_state_from_enemy() -> Node:
+	if not owner or not owner is Enemy:
+		print_rich("[color=red]❌ StateMachine ERROR:[/color] [color=white]Owner is not an Enemy[/color]")
+		return get_child(0) if get_child_count() > 0 else null
+	
+	var enemy = owner as Enemy
+	var target_state_name: String
+	
+	match enemy.current_state:
+		Enemy.State.AI:
+			target_state_name = "AIMoveState"
+		Enemy.State.INERT:
+			target_state_name = "InertIdleState"
+		Enemy.State.CONTROLLED:
+			target_state_name = "ControlledIdleState"
+		_:
+			print_rich("[color=orange]⚠️ StateMachine Warning:[/color] [color=white]Unknown enemy state, defaulting to AI[/color]")
+			target_state_name = "AIMoveState"
+	
+	var target_state = get_node_or_null(target_state_name)
+	if target_state:
+		return target_state
+	else:
+		print_rich("[color=red]❌ StateMachine ERROR:[/color] [color=white]State node not found:[/color] [color=gray]%s[/color]" % target_state_name)
+		return get_child(0) if get_child_count() > 0 else null
