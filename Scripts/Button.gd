@@ -53,14 +53,15 @@ func _setup_button() -> void:
 			node2d.rotation = deg_to_rad(-90)
 		sprite.modulate = inactive_color
 	
-	if area:
-		# Configure collision detection based on type
-		if _is_temporary_button():
-			# Temporary buttons detect enemies (layer 3) and weapons (layer 6)
-			area.collision_mask = (1 << 2) | (1 << 5)  # Layer 3 (Enemies) + Layer 6 (Weapons)
-		else:
-			# Permanent buttons (LIGHT_*) detect projectiles only
-			area.collision_mask = 1 << 4  # Layer 5 (Projectiles) - adjust layer as needed
+	if not Engine.is_editor_hint():
+		if area:
+			# Configure collision detection based on type
+			if _is_temporary_button():
+				# Temporary buttons detect enemies (layer 3) and weapons (layer 6)
+				area.collision_mask = (1 << 2) | (1 << 5)  # Layer 3 (Enemies) + Layer 6 (Weapons)
+			else:
+				# Permanent buttons (LIGHT_*) detect projectiles only
+				area.collision_mask = 1 << 4  # Layer 5 (Projectiles) - adjust layer as needed
 	
 	if light:
 		# Start with light disabled

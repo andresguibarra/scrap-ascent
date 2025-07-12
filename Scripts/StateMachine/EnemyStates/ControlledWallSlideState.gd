@@ -28,6 +28,10 @@ func physics_update(_delta: float) -> void:
 	# Prevent going up during wall slide
 	if enemy.velocity.y < 0:
 		enemy.velocity.y = 0
+
+	if enemy.is_on_floor():
+		finished.emit(CONTROLLED_IDLE)
+		return
 	
 	# Check if player is pressing toward the wall
 	var input_toward_wall = false

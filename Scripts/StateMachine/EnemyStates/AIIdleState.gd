@@ -23,8 +23,3 @@ func physics_update(delta: float) -> void:
 	if idle_timer >= max_idle_time:
 		finished.emit(EnemyState.AI_MOVE)
 		return
-	
-	# Check for movement transitions
-	var movement_transition = check_movement_transitions()
-	if movement_transition != "":
-		finished.emit(movement_transition)

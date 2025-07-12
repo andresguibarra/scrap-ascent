@@ -10,6 +10,3 @@ func physics_update(delta: float) -> void:
 	
 	apply_gravity_and_movement(delta)
 	
-	var movement_transition = check_movement_transitions()
-	if movement_transition != "":
-		finished.emit(movement_transition)
