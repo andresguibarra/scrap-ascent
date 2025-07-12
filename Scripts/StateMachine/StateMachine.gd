@@ -92,6 +92,8 @@ func _get_controlled_state_display(action: String) -> String:
 			return "[color=orange]🧗 WallSlide[/color]"
 		"JustLeftWallSlide":
 			return "[color=orange]🕐 JustLeftWallSlide[/color]"
+		"JustLeftFloor":
+			return "[color=yellow]🕐 JustLeftFloor[/color]"
 		_:
 			return "[color=lime]🎮 %s[/color]" % action
 
