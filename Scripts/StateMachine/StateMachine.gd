@@ -19,10 +19,11 @@ func _ready() -> void:
 	
 	# Initialize state
 	if state:
-		print("StateMachine: Entering initial state: ", state.name)
+		var state_display = _format_state_name(state.name)
+		print_rich("[color=cyan]🚀 StateMachine:[/color] [color=lime]Entering initial state:[/color] [color=yellow]%s[/color]" % state_display)
 		state.enter("")
 	else:
-		print("StateMachine ERROR: No initial state found")
+		print_rich("[color=red]❌ StateMachine ERROR:[/color] [color=white]No initial state found[/color]")
 
 func _unhandled_input(event: InputEvent) -> void:
 	if state:

@@ -25,9 +25,11 @@ func _ready() -> void:
 	# Set enemy reference more directly
 	if owner and owner is Enemy:
 		enemy = owner as Enemy
-		print("EnemyState: ", name, " initialized with enemy: ", enemy.name)
+		# Commented out initialization log - only showing initial state and transitions
+		# var state_display = _format_state_name(name)
+		# print_rich("[color=magenta]⚡ EnemyState:[/color] [color=yellow]%s[/color] [color=lime]initialized with enemy:[/color] [color=cyan]%s[/color]" % [state_display, enemy.name])
 	else:
-		print("EnemyState Warning: Owner is not an Enemy: ", owner)
+		print_rich("[color=orange]⚠️ EnemyState Warning:[/color] [color=white]Owner is not an Enemy:[/color] [color=gray]%s[/color]" % str(owner))
 		# Try to find the Enemy in the scene tree
 		call_deferred("_find_enemy")
 
@@ -40,17 +42,21 @@ func _find_enemy() -> void:
 	while current:
 		if current is Enemy:
 			enemy = current as Enemy
-			print("EnemyState: ", name, " found enemy: ", enemy.name)
+			# Commented out - only showing state transitions
+			# var state_display = _format_state_name(name)
+			# print_rich("[color=magenta]⚡ EnemyState:[/color] [color=yellow]%s[/color] [color=lime]found enemy:[/color] [color=cyan]%s[/color]" % [state_display, enemy.name])
 			return
 		current = current.get_parent()
 	
 	# If we still haven't found it, it might be the owner of the state machine
 	if not enemy and owner and owner is Enemy:
 		enemy = owner as Enemy
-		print("EnemyState: ", name, " found enemy via owner: ", enemy.name)
+		# Commented out - only showing state transitions
+		# var state_display = _format_state_name(name)
+		# print_rich("[color=magenta]⚡ EnemyState:[/color] [color=yellow]%s[/color] [color=lime]found enemy via owner:[/color] [color=cyan]%s[/color]" % [state_display, enemy.name])
 	
 	if not enemy:
-		print("EnemyState ERROR: Could not find Enemy reference for ", name)
+		print_rich("[color=red]❌ EnemyState ERROR:[/color] [color=white]Could not find Enemy reference for[/color] [color=gray]%s[/color]" % name)
 
 # Helper methods for all states
 func apply_gravity_and_movement(delta: float) -> void:
@@ -76,3 +82,17 @@ func check_movement_transitions() -> String:
 				return INERT_FALL
 	
 	return ""
+
+func _format_state_name(state_name: String) -> String:
+	# Remove "State" suffix if present
+	var clean_name = state_name.replace("State", "")
+	
+	# Add spaces before capital letters for better readability
+	var result = ""
+	for i in range(clean_name.length()):
+		var char = clean_name[i]
+		if i > 0 and char.to_upper() == char and clean_name[i-1].to_upper() != char:
+			result += " "
+		result += char
+	
+	return result
