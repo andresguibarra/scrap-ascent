@@ -15,6 +15,7 @@ var gravity: float = ProjectSettings.get_setting("physics/2d/default_gravity")
 # Possession state
 var is_possessing: bool = false
 var target_enemy: Enemy = null
+var previous_target_enemy: Enemy = null  # Track previous target for particles
 
 # Light pulsing variables
 var base_light_energy: float = 1.0
@@ -48,7 +49,11 @@ func _process(delta: float) -> void:
 		return
 	
 	var direction: Vector2 = InputManager.get_movement_input()
-	target_enemy = _find_nearest_enemy()
+	var new_target_enemy = _find_nearest_enemy()
+	
+	# Update target particles when target changes
+	_update_target_particles(new_target_enemy)
+	target_enemy = new_target_enemy
 	# _has_clear_line_of_sight(enemy)
 	# Orb horizontal movement
 	if direction.x != 0:
@@ -261,7 +266,13 @@ func _find_nearest_enemy() -> Enemy:
 func _cancel_possession() -> void:
 	print("Orb: Possession cancelled")
 	is_possessing = false
+	
+	# Clear target particles
+	if target_enemy and is_instance_valid(target_enemy):
+		target_enemy.set_as_target(false)
+	
 	target_enemy = null
+	previous_target_enemy = null
 	controlled = true
 	_reset_particle_effects()
 	possession_ended.emit()
@@ -269,9 +280,23 @@ func _cancel_possession() -> void:
 func _reset_particle_effects() -> void:
 	_set_particle_parameters("idle")
 
+func _update_target_particles(new_target: Enemy) -> void:
+	# If target changed, update particles
+	if previous_target_enemy != new_target:
+		# Disable particles on previous target
+		if previous_target_enemy and is_instance_valid(previous_target_enemy):
+			previous_target_enemy.set_as_target(false)
+		
+		# Enable particles on new target
+		if new_target and is_instance_valid(new_target):
+			new_target.set_as_target(true)
+		
+		previous_target_enemy = new_target
+
 func _complete_possession() -> void:
 	print("Orb: Possession completed")
 	if target_enemy:
+		target_enemy.set_as_target(false)  # Clean up target particles
 		_flash_light_on_possession()
 		target_enemy.possess()
 		get_tree().create_timer(0.2).timeout.connect(func(): 

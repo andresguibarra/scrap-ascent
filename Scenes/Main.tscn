@@ -112,6 +112,10 @@ texture = ExtResource("4_rgh2o")
 [sub_resource type="TileSet" id="TileSet_v1gob"]
 sources/0 = SubResource("TileSetAtlasSource_pbw6q")
 
+[sub_resource type="Theme" id="Theme_custom"]
+default_font = ExtResource("5_dd2cp")
+default_font_size = 5
+
 [sub_resource type="Curve" id="Curve_bmxlf"]
 _data = [Vector2(0, 0), 0.0, 2.0, 0, 0, Vector2(1, 1), 2.0, 0.0, 0, 0]
 point_count = 2
@@ -123,10 +127,6 @@ point_count = 2
 [sub_resource type="Curve" id="Curve_50glp"]
 _data = [Vector2(0, 0), 0.0, 0.0, 0, 0, Vector2(0.520677, 0.0870671), 0.494471, 0.494471, 0, 0, Vector2(1, 1), 0.0, 0.0, 0, 0]
 point_count = 3
-
-[sub_resource type="Theme" id="Theme_custom"]
-default_font = ExtResource("5_dd2cp")
-default_font_size = 5
 
 [node name="Main" type="Node2D"]
 metadata/_edit_lock_ = true
@@ -179,6 +179,86 @@ self_modulate = Color(1, 1, 1, 0.92549)
 z_index = -1
 tile_map_data = PackedByteArray("AAAZABQAAAAKAAAAAAAaABQAAAAKAAAAAAAXABQAAAAEAAAAAAAXABUAAAAJAAAAAAAXABYAAAADAAAAAAAYABQAAAAKAAAAAAAYABUAAAALAAAAAAAYABYAAAAIAAAAAAAZABUAAAALAAAAAAAZABYAAAAIAAAAAAAaABUAAAALAAAAAAAaABYAAAAIAAAAAAAcABQAAAAFAAAAAAAcABUAAAAHAAAAAAAcABYAAAAGAAAAAAAbABQAAAAKAAAAAAAbABYAAAAIAAAAAAAbABUAAAALAAAAAAAQAPb/AAAEAAAAAAAQAPf/AAADAAAAAAARAPb/AAAKAAAAAAARAPf/AAAIAAAAAAASAPb/AAAKAAAAAAASAPf/AAAIAAAAAAATAPb/AAAKAAAAAAATAPf/AAAIAAAAAAAUAPb/AAAFAAAAAAAUAPf/AAAGAAAAAAD7/yAAAAAJAAAAAAD7/yEAAAADAAAAAAD8/yAAAAALAAAAAAD8/yEAAAAIAAAAAAD9/yAAAAALAAAAAAD9/yEAAAAIAAAAAAD+/yAAAAALAAAAAAD+/yEAAAAIAAAAAAD//yAAAAALAAAAAAD//yEAAAAIAAAAAAAAACAAAAAHAAAAAAAAACEAAAAGAAAAAAD7/x8AAAAEAAAAAAD8/x8AAAAKAAAAAAD9/x8AAAAKAAAAAAD+/x8AAAAKAAAAAAD//x8AAAAKAAAAAAAAAB8AAAAFAAAAAAAhAPb/AAAEAAAAAAAhAPf/AAADAAAAAAAiAPb/AAAKAAAAAAAiAPf/AAAIAAAAAAAjAPb/AAAKAAAAAAAjAPf/AAAIAAAAAAAkAPb/AAAKAAAAAAAkAPf/AAAIAAAAAAAlAPb/AAAFAAAAAAAlAPf/AAAGAAAAAAAhAOf/AAAEAAAAAAAhAOj/AAADAAAAAAAiAOf/AAAKAAAAAAAiAOj/AAAIAAAAAAAjAOf/AAAKAAAAAAAjAOj/AAAIAAAAAAAkAOf/AAAKAAAAAAAkAOj/AAAIAAAAAAAlAOf/AAAKAAAAAAAlAOj/AAAIAAAAAAAmAOf/AAAFAAAAAAAmAOj/AAAGAAAAAAAeALL/AAAEAAAAAAAeALP/AAADAAAAAAAfALL/AAAKAAAAAAAfALP/AAAIAAAAAAAgALL/AAAKAAAAAAAgALP/AAAIAAAAAAAhALL/AAAKAAAAAAAhALP/AAAIAAAAAAAiALL/AAAKAAAAAAAiALP/AAAIAAAAAAAjALL/AAAFAAAAAAAjALP/AAAGAAAAAAA=")
 tile_set = SubResource("TileSet_v1gob")
+
+[node name="Messages" type="Node" parent="."]
+metadata/_edit_lock_ = true
+
+[node name="JumpAndTakeOverMessage" type="RichTextLabel" parent="Messages"]
+z_index = -1
+offset_left = -74.0
+offset_top = 503.0
+offset_right = 10.0
+offset_bottom = 542.0
+theme = SubResource("Theme_custom")
+bbcode_enabled = true
+text = "[color=#4e7341][outline_size=2][outline_color=#20321b]
+Space Bar:Jump
+
+ K:Take over
+[/outline_color][/outline_size][/color]"
+tab_size = 2
+
+[node name="DashMessage" type="RichTextLabel" parent="Messages"]
+offset_left = 266.0
+offset_top = -155.0
+offset_right = 327.0
+offset_bottom = -131.0
+theme = SubResource("Theme_custom")
+bbcode_enabled = true
+text = "[color=#4e7341][outline_size=2][outline_color=#20321b]
+Shift:Dash
+[/outline_color][/outline_size][/color]"
+tab_size = 2
+
+[node name="ShootMessage" type="RichTextLabel" parent="Messages"]
+offset_left = 535.0
+offset_top = -154.0
+offset_right = 603.0
+offset_bottom = -130.0
+theme = SubResource("Theme_custom")
+bbcode_enabled = true
+text = "[color=#4e7341][outline_size=2][outline_color=#20321b]
+Enter:Shoot
+[/outline_color][/outline_size][/color]"
+tab_size = 2
+
+[node name="DropWeapon2" type="RichTextLabel" parent="Messages"]
+offset_left = 493.0
+offset_top = -1243.0
+offset_right = 573.0
+offset_bottom = -1211.0
+theme = SubResource("Theme_custom")
+bbcode_enabled = true
+text = "[color=#4e7341][outline_size=2][outline_color=#20321b]
+Double jump!
+[/outline_color][/outline_size][/color]"
+tab_size = 2
+
+[node name="DropWeapon" type="RichTextLabel" parent="Messages"]
+offset_left = 536.0
+offset_top = -397.0
+offset_right = 616.0
+offset_bottom = -365.0
+theme = SubResource("Theme_custom")
+bbcode_enabled = true
+text = "[color=#4e7341][outline_size=2][outline_color=#20321b]
+C:Drop/Return
+		weapon
+[/outline_color][/outline_size][/color]"
+tab_size = 2
+metadata/_edit_lock_ = true
+
+[node name="MoveLeftMoveRightMessage" type="RichTextLabel" parent="Messages"]
+offset_left = 381.0
+offset_top = 332.0
+offset_right = 454.0
+offset_bottom = 356.0
+theme = SubResource("Theme_custom")
+bbcode_enabled = true
+text = "[color=#4e7341][outline_size=2][outline_color=#20321b]A:Move Left
+
+D:Move Right[/outline_color][/outline_size][/color]"
+tab_size = 2
 
 [node name="GlowboxesActivatedByStair" type="Node" parent="."]
 metadata/_edit_lock_ = true
@@ -306,7 +386,7 @@ type = 2
 position = Vector2(-452, 2436)
 
 [node name="EnemyTier1" parent="." instance=ExtResource("6_v1gob")]
-position = Vector2(-56, 608)
+position = Vector2(-66, 612)
 
 [node name="EnemyTier3" parent="." instance=ExtResource("6_v1gob")]
 position = Vector2(632, -72)
@@ -426,85 +506,6 @@ path_size_tiles = 26
 [node name="ButtonThatActivatesPlatform" parent="PuzzleWithPlatform" instance=ExtResource("6_50glp")]
 position = Vector2(104, -136)
 inactive_color = Color(0.318605, 0.466286, 0.2832, 1)
-
-[node name="Messages" type="Node" parent="."]
-metadata/_edit_lock_ = true
-
-[node name="JumpAndTakeOverMessage" type="RichTextLabel" parent="Messages"]
-offset_left = -74.0
-offset_top = 503.0
-offset_right = 10.0
-offset_bottom = 542.0
-theme = SubResource("Theme_custom")
-bbcode_enabled = true
-text = "[color=#4e7341][outline_size=2][outline_color=#20321b]
-Space Bar:Jump
-
- K:Take over
-[/outline_color][/outline_size][/color]"
-tab_size = 2
-
-[node name="DashMessage" type="RichTextLabel" parent="Messages"]
-offset_left = 266.0
-offset_top = -155.0
-offset_right = 327.0
-offset_bottom = -131.0
-theme = SubResource("Theme_custom")
-bbcode_enabled = true
-text = "[color=#4e7341][outline_size=2][outline_color=#20321b]
-Shift:Dash
-[/outline_color][/outline_size][/color]"
-tab_size = 2
-
-[node name="ShootMessage" type="RichTextLabel" parent="Messages"]
-offset_left = 535.0
-offset_top = -154.0
-offset_right = 603.0
-offset_bottom = -130.0
-theme = SubResource("Theme_custom")
-bbcode_enabled = true
-text = "[color=#4e7341][outline_size=2][outline_color=#20321b]
-Enter:Shoot
-[/outline_color][/outline_size][/color]"
-tab_size = 2
-
-[node name="DropWeapon2" type="RichTextLabel" parent="Messages"]
-offset_left = 493.0
-offset_top = -1243.0
-offset_right = 573.0
-offset_bottom = -1211.0
-theme = SubResource("Theme_custom")
-bbcode_enabled = true
-text = "[color=#4e7341][outline_size=2][outline_color=#20321b]
-Double jump!
-[/outline_color][/outline_size][/color]"
-tab_size = 2
-
-[node name="DropWeapon" type="RichTextLabel" parent="Messages"]
-offset_left = 536.0
-offset_top = -397.0
-offset_right = 616.0
-offset_bottom = -365.0
-theme = SubResource("Theme_custom")
-bbcode_enabled = true
-text = "[color=#4e7341][outline_size=2][outline_color=#20321b]
-C:Drop/Return
-		weapon
-[/outline_color][/outline_size][/color]"
-tab_size = 2
-metadata/_edit_lock_ = true
-
-[node name="MoveLeftMoveRightMessage" type="RichTextLabel" parent="Messages"]
-offset_left = 381.0
-offset_top = 332.0
-offset_right = 454.0
-offset_bottom = 356.0
-theme = SubResource("Theme_custom")
-bbcode_enabled = true
-text = "[color=#4e7341][outline_size=2][outline_color=#20321b]A:Move Left
-
-D:Move Right[/outline_color][/outline_size][/color]"
-tab_size = 2
 
 [node name="PuzzleWithDoorNearFirstWallClimb" type="Node" parent="."]
 metadata/_edit_lock_ = true

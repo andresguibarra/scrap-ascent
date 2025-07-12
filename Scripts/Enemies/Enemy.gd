@@ -97,6 +97,8 @@ var jump_buffer_time: float = 0.15  # Reduced from 0.3 to 0.15 for better balanc
 @onready var eyes_sprite: AnimatedSprite2D = $Eyes
 @onready var light: PointLight2D = $PointLight2D
 @onready var damage_particles: GPUParticles2D = $DamageParticles
+@onready var target_particles: GPUParticles2D = $TargetEnemyGPUParticles2D
+@onready var target_light: PointLight2D = $TargetEnemyPointLight2D
 @onready var audio_player: AudioStreamPlayer = $AudioStreamPlayer
 @onready var state_machine: Node = $StateMachine
 
@@ -123,6 +125,12 @@ func _ready() -> void:
 	_update_visual_state()
 	call_deferred("_initialize_eyes_state")
 	call_deferred("_connect_state_machine_signals")
+	
+	# Initialize target particles as disabled
+	if target_particles:
+		target_particles.emitting = false
+	if target_light:
+		target_light.enabled = false	
 
 func _process(_delta: float) -> void:
 	if Engine.is_editor_hint():
@@ -508,6 +516,16 @@ func set_jump_buffer() -> void:
 
 func has_jump_buffer() -> bool:
 	return jump_buffer_timer > 0.0
+
+# Target particles management
+func set_as_target(is_target: bool) -> void:
+	if target_particles:
+		target_particles.emitting = is_target
+	if target_light:
+		target_light.enabled = is_target
+
+func is_target() -> bool:
+	return target_particles and target_particles.emitting
 
 func consume_jump_buffer() -> void:
 	jump_buffer_timer = 0.0

@@ -1,4 +1,4 @@
-[gd_scene load_steps=46 format=3 uid="uid://br3eqxxhw6lmw"]
+[gd_scene load_steps=47 format=3 uid="uid://br3eqxxhw6lmw"]
 
 [ext_resource type="Script" uid="uid://cri6ele7qliv2" path="res://Scripts/Enemies/Enemy.gd" id="1_3h0b7"]
 [ext_resource type="AudioStream" uid="uid://pe63owraoa3h" path="res://Assets/Sounds/aJump.ogg" id="2_35yb6"]
@@ -230,6 +230,20 @@ animations = [{
 "speed": 3.0
 }]
 
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_60utq"]
+lifetime_randomness = 0.18
+particle_flag_disable_z = true
+emission_shape = 1
+emission_sphere_radius = 1.5
+direction = Vector3(0, 1, 0)
+spread = 98.16
+initial_velocity_min = 8.0
+initial_velocity_max = 25.0
+gravity = Vector3(0, 15, 0)
+scale_min = 0.08
+scale_max = 0.6
+color = Color(0.564706, 0.92549, 0.94902, 0.901961)
+
 [node name="Enemy" type="CharacterBody2D" groups=["enemies"]]
 collision_layer = 4
 collision_mask = 65
@@ -342,3 +356,24 @@ script = ExtResource("18_inert_idle")
 
 [node name="InertFallState" type="Node" parent="StateMachine"]
 script = ExtResource("19_inert_fall")
+
+[node name="TargetEnemyPointLight2D" type="PointLight2D" parent="."]
+position = Vector2(0, -1.625)
+scale = Vector2(0.533333, 0.425)
+enabled = false
+energy = 1.5
+range_layer_min = -512
+range_layer_max = 512
+shadow_enabled = true
+shadow_filter = 1
+texture = ExtResource("3_light")
+texture_scale = 0.03
+
+[node name="TargetEnemyGPUParticles2D" type="GPUParticles2D" parent="."]
+z_index = 1
+position = Vector2(0, -10)
+emitting = false
+amount = 100
+lifetime = 1.37
+interp_to_end = 0.56
+process_material = SubResource("ParticleProcessMaterial_60utq")

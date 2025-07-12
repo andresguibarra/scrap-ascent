@@ -56,4 +56,3 @@ func physics_update(delta: float) -> void:
 		return
 	
 	apply_gravity_and_movement(delta)
-
