@@ -4,6 +4,13 @@ func enter(_previous_state_path: String, _data := {}) -> void:
 	enemy.set_animation("WallSlide")
 	if enemy.wall_slide_sound:
 		enemy.play_sound(enemy.wall_slide_sound)
+	
+	# Check if we can wall jump from this wall
+	if enemy.is_same_wall_as_before():
+		# If it's the same wall as before, go directly to fall
+		finished.emit(CONTROLLED_FALL)
+		return
+	
 	# Wall slide physics: constant downward speed
 	enemy.velocity.y = enemy.wall_slide_speed
 	
@@ -49,13 +56,13 @@ func physics_update(_delta: float) -> void:
 	if dash and enemy.can_dash():
 		finished.emit(CONTROLLED_DASH)
 		return
-	
+		
 	# Priority 2: Wall Jump (if we have buffer and can wall jump)
-	# if enemy.has_jump_buffer() and enemy.can_wall_jump():
-	# 	enemy.set_wall_jump_cooldown()
-	# 	finished.emit(CONTROLLED_JUMP)
-	# 	return
-	
+	if enemy.has_jump_buffer() and enemy.can_wall_jump():
+		enemy.set_wall_jump_cooldown()
+		finished.emit(CONTROLLED_JUMP)
+		return
+
 	enemy.move_and_slide()
 	
 	# Exit wall slide if no longer against wall

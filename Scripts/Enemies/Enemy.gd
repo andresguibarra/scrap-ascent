@@ -149,6 +149,7 @@ func _physics_process(delta: float) -> void:
 	# Reset wall jump cooldown when touching ground
 	if is_on_floor():
 		wall_jump_cooldown = 0.0
+		last_wall_jump_normal = Vector2.ZERO  # Reset wall reference when touching ground
 
 # CONFIGURATION METHODS
 func _setup_tier_configuration() -> void:
@@ -279,6 +280,26 @@ func reset_wall_jump_cooldown() -> void:
 	wall_jump_cooldown = 0.0
 	last_wall_jump_normal = Vector2.ZERO  # Reset the last wall reference too
 
+func is_same_wall_as_last_jump(wall_normal_to_check: Vector2) -> bool:
+	# If we don't have a valid last wall normal, it's a different wall
+	if last_wall_jump_normal == Vector2.ZERO:
+		return false
+	
+	# If current wall normal is invalid, assume different wall
+	if wall_normal_to_check == Vector2.ZERO:
+		return false
+	
+	var dot_product = wall_normal_to_check.dot(last_wall_jump_normal)
+	var same_wall = dot_product > 0.9
+	return same_wall
+
+func is_same_wall_as_before() -> bool:
+	if not is_against_wall(true):
+		return false
+	
+	var current_wall_normal = get_current_wall_normal()
+	return is_same_wall_as_last_jump(current_wall_normal)
+
 func get_current_wall_normal() -> Vector2:
 	if not wall_raycast:
 		return Vector2.ZERO
@@ -292,19 +313,6 @@ func get_current_wall_normal() -> Vector2:
 		return normal
 	
 	return Vector2.ZERO
-
-func is_same_wall_as_last_jump(wall_normal_to_check: Vector2) -> bool:
-	# If we don't have a valid last wall normal, it's a different wall
-	if last_wall_jump_normal == Vector2.ZERO:
-		return false
-	
-	# If current wall normal is invalid, assume different wall
-	if wall_normal_to_check == Vector2.ZERO:
-		return false
-	
-	var dot_product = wall_normal_to_check.dot(last_wall_jump_normal)
-	var same_wall = dot_product > 0.9
-	return same_wall
 
 # CEILING CORNER CORRECTION
 func apply_ceiling_corner_correction() -> void:
