@@ -1,4 +1,4 @@
-[gd_scene load_steps=45 format=3 uid="uid://br3eqxxhw6lmw"]
+[gd_scene load_steps=46 format=3 uid="uid://br3eqxxhw6lmw"]
 
 [ext_resource type="Script" uid="uid://cri6ele7qliv2" path="res://Scripts/Enemies/Enemy.gd" id="1_3h0b7"]
 [ext_resource type="AudioStream" uid="uid://pe63owraoa3h" path="res://Assets/Sounds/aJump.ogg" id="2_35yb6"]
@@ -21,8 +21,9 @@
 [ext_resource type="Script" uid="uid://csu65bkxwqutl" path="res://Scripts/StateMachine/EnemyStates/ControlledDashState.gd" id="14_ctrl_dash"]
 [ext_resource type="Script" uid="uid://bdme5q3pxn0ex" path="res://Scripts/StateMachine/EnemyStates/ControlledWallSlideState.gd" id="15_ctrl_wall"]
 [ext_resource type="Script" uid="uid://2wvqsnrnxhpd" path="res://Scripts/StateMachine/EnemyStates/ControlledJustLeftWallSlideState.gd" id="16_ctrl_just_left_wall"]
-[ext_resource type="Script" uid="uid://slc0he27uefc" path="res://Scripts/StateMachine/EnemyStates/InertIdleState.gd" id="17_inert_idle"]
-[ext_resource type="Script" uid="uid://c0p7dltt7isdf" path="res://Scripts/StateMachine/EnemyStates/InertFallState.gd" id="18_inert_fall"]
+[ext_resource type="Script" uid="uid://cr2posfndvsde" path="res://Scripts/StateMachine/EnemyStates/ControlledJustLeftFloorState.gd" id="17_ctrl_just_left_floor"]
+[ext_resource type="Script" uid="uid://slc0he27uefc" path="res://Scripts/StateMachine/EnemyStates/InertIdleState.gd" id="18_inert_idle"]
+[ext_resource type="Script" uid="uid://c0p7dltt7isdf" path="res://Scripts/StateMachine/EnemyStates/InertFallState.gd" id="19_inert_fall"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_1"]
 size = Vector2(15, 16)
@@ -334,8 +335,11 @@ script = ExtResource("15_ctrl_wall")
 [node name="ControlledJustLeftWallSlideState" type="Node" parent="StateMachine"]
 script = ExtResource("16_ctrl_just_left_wall")
 
+[node name="ControlledJustLeftFloorState" type="Node" parent="StateMachine"]
+script = ExtResource("17_ctrl_just_left_floor")
+
 [node name="InertIdleState" type="Node" parent="StateMachine"]
-script = ExtResource("17_inert_idle")
+script = ExtResource("18_inert_idle")
 
 [node name="InertFallState" type="Node" parent="StateMachine"]
-script = ExtResource("18_inert_fall")
+script = ExtResource("19_inert_fall")

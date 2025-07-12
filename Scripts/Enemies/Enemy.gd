@@ -85,7 +85,7 @@ var last_wall_jump_normal: Vector2 = Vector2.ZERO
 
 # Jump buffer for coyote-like behavior
 var jump_buffer_timer: float = 0.0
-var jump_buffer_time: float = 0.3  # Reduced from 0.3 to 0.15 for better balance
+var jump_buffer_time: float = 0.15  # Reduced from 0.3 to 0.15 for better balance
 
 # Node references
 @onready var edge_raycast: RayCast2D = $EdgeRayCast2D

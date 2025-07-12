@@ -43,7 +43,8 @@ func physics_update(delta: float) -> void:
 	
 	# Check for transitions based on movement and physics
 	if not enemy.is_on_floor():
-		finished.emit(CONTROLLED_FALL)
+		# Use coyote time instead of going directly to fall
+		finished.emit(CONTROLLED_JUST_LEFT_FLOOR)
 		return
 	
 	# Transition to idle if not moving

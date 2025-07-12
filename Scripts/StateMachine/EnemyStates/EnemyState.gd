@@ -15,6 +15,7 @@ const CONTROLLED_FALL = "ControlledFallState"
 const CONTROLLED_DASH = "ControlledDashState"
 const CONTROLLED_WALL_SLIDE = "ControlledWallSlideState"
 const CONTROLLED_JUST_LEFT_WALL_SLIDE = "ControlledJustLeftWallSlideState"
+const CONTROLLED_JUST_LEFT_FLOOR = "ControlledJustLeftFloorState"
 
 const INERT_IDLE = "InertIdleState"
 const INERT_FALL = "InertFallState"
