@@ -1,4 +1,4 @@
-extends RigidBody2D
+extends CharacterBody2D
 class_name Projectile
 
 @export var speed: float = 500.0
@@ -15,14 +15,6 @@ var weapon_was_held: bool = false  # Whether weapon was held when this projectil
 
 func _ready() -> void:
 	add_to_group("projectiles")
-	# Enable contact monitoring for collision detection
-	contact_monitor = true
-	max_contacts_reported = 10
-	continuous_cd = RigidBody2D.CCD_MODE_CAST_RAY
-	lock_rotation = true
-	
-	# Connect the body_entered signal
-	body_entered.connect(_on_body_entered)
 	
 	# Setup impact timer
 	add_child(impact_timer)
@@ -34,32 +26,46 @@ func _ready() -> void:
 	if sprite:
 		sprite.frame = 0
 
-func _process(delta: float) -> void:
+func _physics_process(delta: float) -> void:
 	if shooter_grace_timer > 0.0:
 		shooter_grace_timer -= delta
+	
 	if has_hit:
-		# If projectile has hit, we can stop processing movement
-		linear_velocity = Vector2.ZERO
-		gravity_scale = 0.0
-		freeze = true
+		# If projectile has hit, stop movement
+		velocity = Vector2.ZERO
 		return
+	
+	# Move the projectile
+	var collision = move_and_slide()
+	
+	# Check for collisions
+	if collision:
+		for i in get_slide_collision_count():
+			var collision_info = get_slide_collision(i)
+			_handle_collision(collision_info.get_collider())
+			break
 
 func launch(direction: Vector2, from_shooter: Node = null, held_when_fired: bool = false) -> void:
-	linear_velocity = direction * speed
+	# Force horizontal direction only - ignore vertical component
+	var horizontal_direction = Vector2(direction.x, 0).normalized()
+	
+	# Fallback to right if no horizontal direction
+	if horizontal_direction == Vector2.ZERO:
+		horizontal_direction = Vector2.RIGHT
+	
+	# Set the velocity - CharacterBody2D has perfect control
+	velocity = horizontal_direction * speed
 	shooter = from_shooter
 	weapon_was_held = held_when_fired
 	# Only apply grace period if weapon was held when fired
 	shooter_grace_timer = shooter_grace_period if weapon_was_held else 0.0
 	
 	# Set sprite direction based on movement direction
-	if sprite and direction.x != 0:
+	if sprite and horizontal_direction.x != 0:
 		# Sprite frame 0 faces left by default, so flip when going right
-		sprite.flip_h = direction.x > 0
+		sprite.flip_h = horizontal_direction.x > 0
 
-func _on_timer_timeout() -> void:
-	queue_free()
-
-func _on_body_entered(body: Node) -> void:
+func _handle_collision(body: Node) -> void:
 	# Prevent multiple hits
 	if has_hit:
 		return
@@ -71,16 +77,18 @@ func _on_body_entered(body: Node) -> void:
 	has_hit = true
 	
 	# Stop the projectile movement
-	linear_velocity = Vector2.ZERO
-	gravity_scale = 0.0
-	freeze = true
-	print("Projectile frozen at position: ", global_position)
+	velocity = Vector2.ZERO
+	print("Projectile hit: ", body.name)
+	
 	# Apply damage if the body can take damage
 	if body.has_method("take_damage"):
 		body.take_damage()
 	
 	# Show impact animation
 	_show_impact_frames()
+
+func _on_timer_timeout() -> void:
+	queue_free()
 
 func _show_impact_frames() -> void:
 	if not sprite:
