@@ -5,7 +5,6 @@ extends StaticBody2D
 @export var countdown_duration: float = 3.0
 
 @onready var animated_sprite: AnimatedSprite2D = $AnimatedSprite2D
-@onready var light: PointLight2D = $PointLight2D
 
 var is_counting_down: bool = false
 var countdown_timer: float = 0.0
@@ -30,9 +29,7 @@ func _set_initial_state() -> void:
 	if animated_sprite:
 		animated_sprite.play("Off")
 	
-	# Light starts disabled
-	if light:
-		light.enabled = false
+	
 
 func _connect_to_trigger() -> void:
 	if trigger_node and trigger_node.has_signal("activated"):
@@ -54,16 +51,6 @@ func _start_countdown() -> void:
 		animated_sprite.play("Countdown")
 		animated_sprite.pause()  # Pause to control manually
 	
-	# Activate countdown light
-	if light:
-		light.enabled = true
-		light.energy = 1.5
-		light.color = countdown_light_color
-		# Add subtle pulsing effect
-		var tween = create_tween()
-		tween.set_loops()
-		tween.tween_property(light, "energy", 2.0, 0.5)
-		tween.tween_property(light, "energy", 1.0, 0.5)
 
 func _update_countdown(delta: float) -> void:
 	countdown_timer -= delta
@@ -88,10 +75,6 @@ func _finish_countdown() -> void:
 	# Return to off state
 	if animated_sprite:
 		animated_sprite.play("Off")
-	
-	# Disable light
-	if light:
-		light.enabled = false
 	
 	# Deactivate the trigger button
 	if trigger_node and trigger_node.has_method("_deactivate_button"):

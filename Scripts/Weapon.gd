@@ -167,7 +167,7 @@ func _create_projectile() -> Projectile:
 		return null
 
 func _launch_projectile(projectile: Projectile) -> void:
-	projectile.global_position = shoot_point.global_position
+	projectile.global_position = shoot_point.global_position + Vector2(10, 0)
 	var shoot_direction := Vector2(1 if facing_right else -1, 0)
 	projectile.launch(shoot_direction, holder, is_held)
 

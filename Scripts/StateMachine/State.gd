@@ -1,5 +1,5 @@
 class_name State extends Node
-
+@warning_ignore("unused_signal")
 signal finished(next_state_path: String, data: Dictionary)
 
 func handle_input(_event: InputEvent) -> void:

@@ -44,9 +44,9 @@ func _format_state_name(state_name: String) -> String:
 	# Add spaces before capital letters for better readability
 	var result = ""
 	for i in range(clean_name.length()):
-		var char = clean_name[i]
-		if i > 0 and char.to_upper() == char and clean_name[i-1].to_upper() != char:
+		var character = clean_name[i]
+		if i > 0 and character.to_upper() == character and clean_name[i-1].to_upper() != character:
 			result += " "
-		result += char
+		result += character
 	
 	return result
