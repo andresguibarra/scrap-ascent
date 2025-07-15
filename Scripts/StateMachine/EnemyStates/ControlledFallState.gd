@@ -2,7 +2,7 @@ extends "res://Scripts/StateMachine/EnemyStates/EnemyState.gd"
 
 func enter(_previous_state_path: String, _data := {}) -> void:
 	enemy.set_animation("Fall")
-	if enemy.can_wall_jump() and enemy.has_jump_buffer():
+	if enemy.can_wall_jump() and enemy.has_jump_buffer() and enemy.can_jump():
 		finished.emit(CONTROLLED_JUMP)
 
 func handle_input(_event: InputEvent) -> void:
@@ -28,7 +28,9 @@ func physics_update(delta: float) -> void:
 		if enemy.can_double_jump():
 			finished.emit(CONTROLLED_DOUBLE_JUMP)
 			return
-			# Store jump input in centralized buffer
+		elif enemy.can_jump():
+			finished.emit(CONTROLLED_JUMP)
+			return
 		
 	if dash and enemy.can_dash():
 		finished.emit(CONTROLLED_DASH)

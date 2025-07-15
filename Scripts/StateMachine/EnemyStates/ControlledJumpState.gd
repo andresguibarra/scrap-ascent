@@ -6,6 +6,7 @@ func enter(_previous_state_path: String, _data := {}) -> void:
 		enemy.play_sound(enemy.jump_sound)
 		enemy.set_animation("Jump")
 		enemy.set_wall_jump_cooldown()
+		enemy.use_jump()  # Incrementar el contador de saltos
 		# Consume the jump buffer when we actually jump
 		enemy.consume_jump_buffer()
 

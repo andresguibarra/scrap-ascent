@@ -78,6 +78,7 @@ var weapon_instance: Weapon = null
 var previous_main_state: Enemy.State = Enemy.State.AI  # Para recordar el estado antes del control
 var has_used_double_jump: bool = false  # Para rastrear si ya usó double jump en el aire actual
 var has_used_dash: bool = false  # Para rastrear si ya usó double jump en el aire actual
+var has_used_jump: bool = false  # Para rastrear si ya usó el salto normal en el aire actual
 
 # Wall jump cooldown tracking
 var wall_jump_cooldown: float = 0.0
@@ -241,9 +242,16 @@ func get_facing_direction() -> float:
 func reset_air_abilities() -> void:
 	has_used_double_jump = false
 	has_used_dash = false
+	has_used_jump = false
 
 func can_double_jump() -> bool:
 	return has_skill(Skill.DOUBLE_JUMP) and not has_used_double_jump
+
+func can_jump() -> bool:
+	return not has_used_jump
+
+func use_jump() -> void:
+	has_used_jump = true
 
 func can_dash() -> bool:
 	return has_skill(Skill.DASH) and not has_used_dash
