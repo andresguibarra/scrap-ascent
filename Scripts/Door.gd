@@ -35,6 +35,22 @@ static func _create_default_curve() -> Curve:
 	set(value):
 		enable_right_marker = value
 		_update_marker_visibility()
+@export var grow_width: bool = false:
+	set(value):
+		grow_width = value
+		_update_door_size()
+@export var left_marker_position: Vector2 = Vector2(-8, 16):
+	set(value):
+		left_marker_position = value
+		_update_marker_positions()
+@export var right_marker_position: Vector2 = Vector2(-8, -16):
+	set(value):
+		right_marker_position = value
+		_update_marker_positions()
+@export var use_custom_marker_positions: bool = false:
+	set(value):
+		use_custom_marker_positions = value
+		_update_marker_positions()
 
 @onready var path_follow: PathFollow2D = $MovementPath/PathFollow2D
 @onready var crush_detector: Area2D = $MovementPath/PathFollow2D/DoorBody/CrushDetector
@@ -68,10 +84,12 @@ func _ready() -> void:
 		_update_path_size()
 		_update_door_size()
 		_update_marker_visibility()
+		_update_marker_positions()
 	else:
 		call_deferred("_update_path_size")
 		call_deferred("_update_door_size")
 		call_deferred("_update_marker_visibility")
+		call_deferred("_update_marker_positions")
 
 func _update_path_size():
 	if not movement_path:
@@ -94,12 +112,17 @@ func _update_path_size():
 func _process(delta: float) -> void:
 	if not Engine.is_editor_hint() and is_animating:
 		_update_animation(delta)
-
-func _physics_process(_delta: float) -> void:
-	if current_state == DoorState.CLOSING and path_follow:
+	if not Engine.is_editor_hint():
+		if current_state == DoorState.CLOSING and path_follow:
 		# Only crush when door is almost fully closed (10% progress, since 0.0 = closed)
-		if path_follow.progress_ratio <= 0.1:
-			_check_for_crushing()
+			if path_follow.progress_ratio <= 0.1:
+				_check_for_crushing()
+
+#func _physics_process(_delta: float) -> void:
+	#if current_state == DoorState.CLOSING and path_follow:
+		## Only crush when door is almost fully closed (10% progress, since 0.0 = closed)
+		#if path_follow.progress_ratio <= 0.1:
+			#_check_for_crushing()
 
 func _update_animation(delta: float) -> void:
 	animation_time += delta
@@ -316,32 +339,61 @@ func _update_door_size():
 	if not door_body:
 		return
 	
-	# Scale the door and compensate position to grow downward
-	door_body.scale.y = float(door_size_tiles)
-	
-	# Compensate position: DoorBody is rotated -90 degrees, so Y scale affects X position
-	# door_size_tiles = 1 => position.x = -8
-	# door_size_tiles = 2 => position.x = -16  
-	# door_size_tiles = 3 => position.x = -24
-	door_body.position.x = -8.0 * door_size_tiles
-	
-	# Also adjust marker positions to match the scaled door
-	# Since the door is rotated -90°, markers need to be positioned at the extremes
-	# Formula: (-16 * tiles) + 8 ensures markers stay at door edges when scaled
-	# door_size_tiles = 1 => markers at x = -8  (original position)
-	# door_size_tiles = 2 => markers at x = -24 (extended door edges)  
-	# door_size_tiles = 3 => markers at x = -40 (further extended edges)
-	var marker_x_pos: float = (-16.0 * door_size_tiles) + 8.0
-	if left_marker:
-		left_marker.position.x = marker_x_pos
-	if right_marker:
-		right_marker.position.x = marker_x_pos
+	if grow_width:
+		# Grow the door width (X scale) instead of length
+		door_body.scale.x = float(door_size_tiles)
+		door_body.scale.y = 1.0
+		
+		# For width growth, keep the door at the original position
+		# No compensation needed, just stay at the movement path position
+		door_body.position.x = -8.0
+		
+		# Only adjust markers if not using custom positions
+		if not use_custom_marker_positions:
+			# Adjust markers for width growth - they move further apart
+			var marker_offset: float = 8.0 * door_size_tiles
+			if left_marker:
+				left_marker.position.x = -marker_offset
+			if right_marker:
+				right_marker.position.x = -marker_offset
+	else:
+		# Original behavior: grow length (Y scale)
+		door_body.scale.y = float(door_size_tiles)
+		door_body.scale.x = 1.0
+		
+		# Compensate position: DoorBody is rotated -90 degrees, so Y scale affects X position
+		# door_size_tiles = 1 => position.x = -8
+		# door_size_tiles = 2 => position.x = -16  
+		# door_size_tiles = 3 => position.x = -24
+		door_body.position.x = -8.0 * door_size_tiles
+		
+		# Only adjust markers if not using custom positions
+		if not use_custom_marker_positions:
+			# Also adjust marker positions to match the scaled door
+			# Since the door is rotated -90°, markers need to be positioned at the extremes
+			# Formula: (-16 * tiles) + 8 ensures markers stay at door edges when scaled
+			# door_size_tiles = 1 => markers at x = -8  (original position)
+			# door_size_tiles = 2 => markers at x = -24 (extended door edges)  
+			# door_size_tiles = 3 => markers at x = -40 (further extended edges)
+			var marker_x_pos: float = (-16.0 * door_size_tiles) + 8.0
+			if left_marker:
+				left_marker.position.x = marker_x_pos
+			if right_marker:
+				right_marker.position.x = marker_x_pos
 
 func _update_marker_visibility():
 	if left_marker:
 		left_marker.visible = enable_left_marker
 	if right_marker:
 		right_marker.visible = enable_right_marker
+
+func _update_marker_positions():
+	if use_custom_marker_positions:
+		if left_marker:
+			left_marker.position = left_marker_position
+		if right_marker:
+			right_marker.position = right_marker_position
+	# If not using custom positions, _update_door_size() will handle positioning
 
 # =============================================================================
 # AUDIO SYSTEM

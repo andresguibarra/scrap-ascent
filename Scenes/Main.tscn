@@ -659,6 +659,9 @@ trigger_nodes = [NodePath("../Button")]
 path_size_tiles = 27
 door_size_tiles = 13
 enable_right_marker = false
+grow_width = true
+left_marker_position = Vector2(20, 0)
+use_custom_marker_positions = true
 
 [node name="Button" parent="BigPlatform" instance=ExtResource("6_50glp")]
 position = Vector2(8, -1976)
