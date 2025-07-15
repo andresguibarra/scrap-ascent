@@ -15,6 +15,7 @@ class_name Weapon
 # Realistic bounce parameters
 @export var wall_bounce_factor := 0.7  # Tennis ball-like bounce off walls
 @export var floor_bounce_factor := 0.02  # Almost no bounce on floor
+@export var max_velocity := 800.0  # Maximum velocity after bounce
 
 var gravity: float = ProjectSettings.get_setting("physics/2d/default_gravity")
 
@@ -29,6 +30,10 @@ var holder_in_area: bool = false
 var holder_has_left_area: bool = false
 var pickup_cooldown_timer: float = 0.0
 @export var pickup_cooldown: float = 1.0  # Seconds to wait after dropping before allowing auto-pickup
+
+# Platform tracking
+var current_platform: CharacterBody2D = null
+var platform_last_position: Vector2
 
 @onready var holder: Node2D
 @onready var shoot_point: Marker2D = $ShootPoint
@@ -65,28 +70,40 @@ func _handle_weapon_physics(delta: float) -> void:
 	# Apply gravity
 	velocity.y += gravity * delta
 	
-	# Use move_and_collide for direct control
-	var collision := move_and_collide(velocity * delta)
+	# Store original velocity for bounce calculations
+	var original_velocity = velocity
 	
-	if collision:
-		var normal := collision.get_normal()
+	# Use move_and_slide for automatic platform handling
+	move_and_slide()
+	
+	# Track platform movement when on ground
+	_track_platform_movement()
+	
+	# Handle bounce effects based on collisions
+	for i in get_slide_collision_count():
+		var collision = get_slide_collision(i)
+		var normal = collision.get_normal()
 		
 		# Wall bounce (only when moving forward)
 		if abs(normal.x) > 0.5:  # Hitting a vertical wall
-			var moving_forward := (facing_right and velocity.x > 0) or (not facing_right and velocity.x < 0)
+			var moving_forward = (facing_right and original_velocity.x > 0) or (not facing_right and original_velocity.x < 0)
 			if moving_forward:
-				velocity.x = -velocity.x * wall_bounce_factor
+				velocity.x = -original_velocity.x * wall_bounce_factor
 			else:
 				velocity.x = 0  # Stop when hitting wall backward
 		
 		# Floor/ceiling bounce
 		if abs(normal.y) > 0.5:  # Hitting horizontal surface
-			if velocity.y > 0:  # Hitting floor
-				velocity.y = -velocity.y * floor_bounce_factor
+			if original_velocity.y > 0:  # Hitting floor
+				velocity.y = -original_velocity.y * floor_bounce_factor
 				# Strong floor friction
 				velocity.x *= 0.85
 			else:  # Hitting ceiling
-				velocity.y = -velocity.y * wall_bounce_factor
+				velocity.y = -original_velocity.y * wall_bounce_factor
+	
+	# Normalize velocity and apply max speed to avoid infinite loops
+	if velocity.length() > max_velocity:
+		velocity = velocity.normalized() * max_velocity
 
 
 # =============================================================================
@@ -167,7 +184,7 @@ func _create_projectile() -> Projectile:
 		return null
 
 func _launch_projectile(projectile: Projectile) -> void:
-	projectile.global_position = shoot_point.global_position + Vector2(10, 0)
+	projectile.global_position = shoot_point.global_position # + (Vector2.ZERO if is_held else Vector2(10, 0))
 	var shoot_direction := Vector2(1 if facing_right else -1, 0)
 	projectile.launch(shoot_direction, holder, is_held)
 
@@ -351,6 +368,9 @@ func _configure_for_held_state() -> void:
 	collision_layer = 0
 	collision_mask = 0
 	
+	# Reset platform tracking
+	current_platform = null
+	
 	_play_gun_get_sound()
 	_update_facing_direction()
 	_update_position_relative_to_holder()
@@ -363,6 +383,9 @@ func _configure_for_dropped_state() -> void:
 	collision_layer = 32  # Layer 6 (Weapons) - keep weapons in their own layer
 	collision_mask = 1    # Layer 1 (World) - should be enough for walls
 	
+	# Reset platform tracking
+	current_platform = null
+	
 	# Start pickup cooldown when dropping
 	pickup_cooldown_timer = pickup_cooldown
 	holder_has_left_area = false  # Reset state when dropping
@@ -370,6 +393,9 @@ func _configure_for_dropped_state() -> void:
 func _configure_for_attraction() -> void:
 	collision_layer = 0
 	collision_mask = 0
+	
+	# Reset platform tracking
+	current_platform = null
 
 # =============================================================================
 # AUTO SETUP
@@ -493,3 +519,35 @@ func _play_throw_sound() -> void:
 	if throw_sound and audio_player:
 		audio_player.stream = throw_sound
 		audio_player.play()
+
+func _track_platform_movement() -> void:
+	if is_on_floor():
+		var floor_collision = null
+		
+		# Find floor collision
+		for i in get_slide_collision_count():
+			var collision = get_slide_collision(i)
+			if collision.get_normal().y < -0.5:  # Floor normal points up
+				floor_collision = collision
+				break
+		
+		if floor_collision:
+			var collider = floor_collision.get_collider()
+			if collider is CharacterBody2D:
+				var platform = collider as CharacterBody2D
+				
+				# If this is a new platform, record its position
+				if current_platform != platform:
+					current_platform = platform
+					platform_last_position = platform.global_position
+				else:
+					# Move with the platform
+					var platform_movement = platform.global_position - platform_last_position
+					global_position += platform_movement
+					platform_last_position = platform.global_position
+			else:
+				# Not on a moving platform
+				current_platform = null
+	else:
+		# Not on floor
+		current_platform = null

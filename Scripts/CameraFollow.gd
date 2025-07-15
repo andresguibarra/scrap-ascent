@@ -10,6 +10,7 @@ var target: Node2D
 var base_zoom: Vector2 = Vector2.ONE
 var target_zoom: Vector2 = Vector2.ONE
 var is_possessing: bool = false
+var zoom_multiplier: float = 3.0
 
 func _process(delta: float) -> void:
 	_find_target()
@@ -59,9 +60,12 @@ func _set_new_target(new_target: Node2D, target_type: String) -> void:
 		_connect_orb_signals(new_target)
 
 func _ready() -> void:
+	# Add camera to the camera group
+	add_to_group("camera")
+	
 	# Store the initial zoom level
 	base_zoom = zoom
-	target_zoom = base_zoom
+	target_zoom = base_zoom * zoom_multiplier
 	print("Camera: Ready - Base zoom stored")
 	
 	# Initially follow the Orb if available
@@ -77,12 +81,12 @@ func _update_zoom(delta: float) -> void:
 
 func _on_possession_started() -> void:
 	is_possessing = true
-	target_zoom = base_zoom * possession_zoom
+	target_zoom = base_zoom * possession_zoom * zoom_multiplier
 	print("Camera: Zooming in for possession")
 
 func _on_possession_ended() -> void:
 	is_possessing = false
-	target_zoom = base_zoom
+	target_zoom = base_zoom * zoom_multiplier
 	print("Camera: Zooming out, possession ended")
 
 func _set_initial_target() -> void:
@@ -106,3 +110,19 @@ func _connect_orb_signals(orb: Node2D) -> void:
 			orb.possession_ended.disconnect(_on_possession_ended)
 		orb.possession_ended.connect(_on_possession_ended)
 		print("Camera: Connected to possession_ended signal")
+
+func set_zoom_multiplier(multiplier: float) -> void:
+	zoom_multiplier = multiplier
+	_update_target_zoom()
+	print("Camera: Zoom multiplier set to ", multiplier)
+
+func reset_zoom_multiplier() -> void:
+	zoom_multiplier = 3.0
+	_update_target_zoom()
+	print("Camera: Zoom multiplier reset to 1.0")
+
+func _update_target_zoom() -> void:
+	if is_possessing:
+		target_zoom = base_zoom * possession_zoom * zoom_multiplier
+	else:
+		target_zoom = base_zoom * zoom_multiplier

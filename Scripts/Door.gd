@@ -7,6 +7,7 @@ enum ActivationCondition { ALL, ANY }
 @export var animation_duration: float = 1.0:
 	set(value):
 		animation_duration = max(0.1, value)  # Minimum 0.1 seconds
+		base_animation_duration = animation_duration
 		_on_animation_duration_changed()
 @export var progress_curve: Curve = null
 @export var door_sound: AudioStream
@@ -67,9 +68,14 @@ var animation_time: float = 0.0
 var is_animating: bool = false
 var target_progress: float = 0.0
 var start_progress: float = 0.0
+var base_animation_duration: float = 1.0
+var current_animation_duration: float = 1.0
 var audio_tween: Tween
 
 func _ready() -> void:
+	# Store the original animation duration
+	base_animation_duration = animation_duration
+	
 	# Ensure each instance has its own unique curve
 	if movement_path and movement_path.curve:
 		movement_path.curve = movement_path.curve.duplicate()
@@ -112,21 +118,16 @@ func _update_path_size():
 func _process(delta: float) -> void:
 	if not Engine.is_editor_hint() and is_animating:
 		_update_animation(delta)
-	if not Engine.is_editor_hint():
-		if current_state == DoorState.CLOSING and path_follow:
-		# Only crush when door is almost fully closed (10% progress, since 0.0 = closed)
-			if path_follow.progress_ratio <= 0.1:
-				_check_for_crushing()
 
-#func _physics_process(_delta: float) -> void:
-	#if current_state == DoorState.CLOSING and path_follow:
-		## Only crush when door is almost fully closed (10% progress, since 0.0 = closed)
-		#if path_follow.progress_ratio <= 0.1:
-			#_check_for_crushing()
+func _physics_process(_delta: float) -> void:
+	if current_state == DoorState.CLOSING and path_follow:
+		# Only crush when door is almost fully closed (10% progress, since 0.0 = closed)
+		if path_follow.progress_ratio <= 0.1:
+			_check_for_crushing()
 
 func _update_animation(delta: float) -> void:
 	animation_time += delta
-	var time_ratio = animation_time / animation_duration
+	var time_ratio = animation_time / current_animation_duration
 	
 	if time_ratio >= 1.0:
 		# Animation complete
@@ -237,6 +238,9 @@ func _start_animation(target: float) -> void:
 		# Already at target, no need to animate
 		is_animating = false
 		return
+	
+	# Scale animation duration based on distance to travel (use temp variable)
+	current_animation_duration = base_animation_duration * distance_to_travel
 	
 	# Reset animation time to start fresh
 	animation_time = 0.0
@@ -419,9 +423,9 @@ func _schedule_audio_stop() -> void:
 	if audio_tween:
 		audio_tween.kill()
 	
-	# Always use the current animation_duration for precise timing
+	# Use the current animation duration for precise timing
 	audio_tween = create_tween()
-	audio_tween.tween_callback(_stop_door_sound).set_delay(animation_duration)
+	audio_tween.tween_callback(_stop_door_sound).set_delay(current_animation_duration)
 
 func _on_animation_duration_changed() -> void:
 	# If audio is currently playing and we have an active tween, reschedule it
