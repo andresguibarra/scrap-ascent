@@ -57,6 +57,7 @@ static func _create_default_curve() -> Curve:
 @onready var crush_detector: Area2D = $MovementPath/PathFollow2D/DoorBody/CrushDetector
 @onready var movement_path: Path2D = $MovementPath
 @onready var door_body: AnimatableBody2D = $MovementPath/PathFollow2D/DoorBody
+@onready var door_sprite: Sprite2D = $MovementPath/PathFollow2D/DoorBody/Sprite2D
 @onready var left_marker: Marker2D = $MovementPath/PathFollow2D/LeftMarker
 @onready var right_marker: Marker2D = $MovementPath/PathFollow2D/RightMarker
 @onready var audio_player: AudioStreamPlayer2D = $AudioStreamPlayer2D
@@ -348,6 +349,10 @@ func _update_door_size():
 		door_body.scale.x = float(door_size_tiles)
 		door_body.scale.y = 1.0
 		
+		# Rotate only the sprite 90 degrees for width growth
+		if door_sprite:
+			door_sprite.rotation = deg_to_rad(-90)
+		
 		# For width growth, keep the door at the original position
 		# No compensation needed, just stay at the movement path position
 		door_body.position.x = -8.0
@@ -364,6 +369,10 @@ func _update_door_size():
 		# Original behavior: grow length (Y scale)
 		door_body.scale.y = float(door_size_tiles)
 		door_body.scale.x = 1.0
+		
+		# Reset sprite rotation to original orientation
+		if door_sprite:
+			door_sprite.rotation = 0.0
 		
 		# Compensate position: DoorBody is rotated -90 degrees, so Y scale affects X position
 		# door_size_tiles = 1 => position.x = -8
