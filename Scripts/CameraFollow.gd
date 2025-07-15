@@ -2,8 +2,9 @@ extends Camera2D
 
 @export var follow_speed: float = 8.0
 @export var offset_y: float = -50.0
-@export var possession_zoom: float = 1.3
-@export var zoom_speed: float = 14.0
+@export var possession_zoom: float = 1.9
+@export var zoom_speed: float = 3.0  # Reduced from 14.0 for more gradual transitions
+@export var zoom_transition_duration: float = 1.0  # Duration for zoom transitions
 @export var smooth_threshold: float = 1.5  # Distance threshold for smooth following
 
 var target: Node2D
@@ -11,6 +12,7 @@ var base_zoom: Vector2 = Vector2.ONE
 var target_zoom: Vector2 = Vector2.ONE
 var is_possessing: bool = false
 var zoom_multiplier: float = 3.0
+var zoom_tween: Tween
 
 func _process(delta: float) -> void:
 	_find_target()
@@ -67,26 +69,22 @@ func _ready() -> void:
 	base_zoom = zoom
 	target_zoom = base_zoom * zoom_multiplier
 	print("Camera: Ready - Base zoom stored")
-	
+	_smooth_zoom_transition()
 	# Initially follow the Orb if available
 	_set_initial_target()
 
 func _update_zoom(delta: float) -> void:
-	# Smoothly interpolate to target zoom with better precision
-	var zoom_difference := target_zoom - zoom
-	if zoom_difference.length() > 0.001:  # Only update if there's a meaningful difference
-		zoom = zoom.lerp(target_zoom, zoom_speed * delta)
-	else:
-		zoom = target_zoom  # Snap to target when very close
+	# Zoom updates are now handled by Tween for smoother transitions
+	pass
 
 func _on_possession_started() -> void:
 	is_possessing = true
-	target_zoom = base_zoom * possession_zoom * zoom_multiplier
+	_smooth_zoom_transition()
 	print("Camera: Zooming in for possession")
 
 func _on_possession_ended() -> void:
 	is_possessing = false
-	target_zoom = base_zoom * zoom_multiplier
+	_smooth_zoom_transition()
 	print("Camera: Zooming out, possession ended")
 
 func _set_initial_target() -> void:
@@ -113,16 +111,35 @@ func _connect_orb_signals(orb: Node2D) -> void:
 
 func set_zoom_multiplier(multiplier: float) -> void:
 	zoom_multiplier = multiplier
-	_update_target_zoom()
+	_smooth_zoom_transition()
 	print("Camera: Zoom multiplier set to ", multiplier)
 
 func reset_zoom_multiplier() -> void:
 	zoom_multiplier = 3.0
-	_update_target_zoom()
-	print("Camera: Zoom multiplier reset to 1.0")
+	_smooth_zoom_transition()
+	print("Camera: Zoom multiplier reset to 3.0")
+
+func _smooth_zoom_transition() -> void:
+	# Calculate new target zoom
+	var new_target_zoom: Vector2
+	if is_possessing:
+		new_target_zoom = base_zoom * possession_zoom * zoom_multiplier
+	else:
+		new_target_zoom = base_zoom * zoom_multiplier
+	
+	# Kill existing tween if running
+	if zoom_tween:
+		zoom_tween.kill()
+	
+	# Create smooth zoom transition
+	zoom_tween = create_tween()
+	zoom_tween.set_ease(Tween.EASE_OUT)
+	zoom_tween.set_trans(Tween.TRANS_CUBIC)
+	zoom_tween.tween_property(self, "zoom", new_target_zoom, zoom_transition_duration)
+	
+	# Update target_zoom for future reference
+	target_zoom = new_target_zoom
 
 func _update_target_zoom() -> void:
-	if is_possessing:
-		target_zoom = base_zoom * possession_zoom * zoom_multiplier
-	else:
-		target_zoom = base_zoom * zoom_multiplier
+	# This method is kept for compatibility but now uses smooth transition
+	_smooth_zoom_transition()
