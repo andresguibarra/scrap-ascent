@@ -23,7 +23,8 @@ shape = SubResource("RectangleShape2D_exit")
 debug_color = Color(0.2, 0.8, 0.2, 0.42)
 
 [node name="PointLight2D" type="PointLight2D" parent="."]
-scale = Vector2(0.076, 0.08)
+position = Vector2(0, -210)
+scale = Vector2(0.076, 0.33)
 energy = 1.5
 shadow_enabled = true
 texture = ExtResource("2_vclj6")

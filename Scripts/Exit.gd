@@ -77,6 +77,11 @@ func _trigger_win() -> void:
 	has_triggered = true
 	print("Exit: Player reached the exit - You Win!")
 	
+	# Apply zoom in effect
+	var camera = get_viewport().get_camera_2d()
+	if camera and camera.has_method("set_zoom_multiplier"):
+		camera.set_zoom_multiplier(2.0)
+	
 	# Play win sound FIRST before other operations
 	_play_win_sound()
 	
