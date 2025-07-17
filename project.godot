@@ -15,7 +15,7 @@ run/main_scene="uid://dm25p6km3qlds"
 config/features=PackedStringArray("4.4", "GL Compatibility")
 boot_splash/bg_color=Color(0, 0, 0, 1)
 boot_splash/use_filter=false
-boot_splash/image="uid://cjhvx3r6o4e14"
+boot_splash/image="uid://bq4wt6w18nhpy"
 config/icon="uid://cha0vm8q7b24i"
 boot_splash/minimum_display_time=2000
 
